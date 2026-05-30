@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>实验室资源与轮转进度管理系统 MVP</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">LR</span>
+          <div>
+            <strong>Lab Rotation</strong>
+            <span>资源与轮转管理</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="主导航">
+          <a href="#overview" class="active">总览</a>
+          <a href="#resources">GPU 大盘</a>
+          <a href="#requests">算力申请</a>
+          <a href="#sandboxes">沙箱编排</a>
+          <a href="#rotation">轮转进度</a>
+          <a href="#knowledge">知识图谱</a>
+        </nav>
+
+        <section class="sidebar-panel">
+          <span>当前角色</span>
+          <select id="roleSelect" aria-label="当前角色">
+            <option value="mentor">导师</option>
+            <option value="student">轮转生</option>
+            <option value="admin">管理员</option>
+          </select>
+        </section>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AI 科研实验室</p>
+            <h1>资源调度与轮转进度工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-box">
+              <span>搜索</span>
+              <input id="globalSearch" type="search" placeholder="学生、课题、方向" />
+            </label>
+            <button id="refreshBtn" class="icon-button" type="button" title="刷新模拟数据" aria-label="刷新模拟数据">
+              ↻
+            </button>
+          </div>
+        </header>
+
+        <section id="overview" class="metrics-grid" aria-label="关键指标">
+          <article class="metric-card">
+            <span>GPU 利用率</span>
+            <strong id="metricGpuUsage">0%</strong>
+            <small>集群平均负载</small>
+          </article>
+          <article class="metric-card">
+            <span>运行中沙箱</span>
+            <strong id="metricContainers">0</strong>
+            <small>隔离环境数量</small>
+          </article>
+          <article class="metric-card warning">
+            <span>进度风险</span>
+            <strong id="metricRisks">0</strong>
+            <small>需导师关注</small>
+          </article>
+          <article class="metric-card">
+            <span>待分配申请</span>
+            <strong id="metricQueue">0</strong>
+            <small>按信用排序</small>
+          </article>
+        </section>
+
+        <section id="resources" class="section-band two-column">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">实时资源</p>
+                <h2>GPU 算力调度大盘</h2>
+              </div>
+              <span id="clusterStatus" class="status-pill">运行正常</span>
+            </div>
+            <div id="gpuGrid" class="gpu-grid"></div>
+          </div>
+
+          <div class="panel compact-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">预测</p>
+                <h2>训练时长估计</h2>
+              </div>
+            </div>
+            <div class="predictor">
+              <label>
+                模型类型
+                <select id="modelType">
+                  <option value="segmentation">医学图像分割</option>
+                  <option value="detection">目标检测</option>
+                  <option value="llm">小规模语言模型微调</option>
+                  <option value="classification">图像分类</option>
+                </select>
+              </label>
+              <label>
+                数据量 GB
+                <input id="datasetSize" type="number" min="10" max="2000" step="10" value="180" />
+              </label>
+              <label>
+                计划 epoch
+                <input id="epochCount" type="number" min="1" max="500" step="1" value="80" />
+              </label>
+              <div class="prediction-card">
+                <span>预计训练时长</span>
+                <strong id="predictedHours">0 小时</strong>
+                <small id="predictionHint">依据历史任务样本估计</small>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="requests" class="section-band two-column">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">申请</p>
+                <h2>算力申请</h2>
+              </div>
+            </div>
+            <form id="requestForm" class="request-form">
+              <label>
+                轮转生
+                <input name="student" required value="林可" />
+              </label>
+              <label>
+                研究方向
+                <input name="topic" required value="医学图像分割" />
+              </label>
+              <label>
+                GPU 数
+                <input name="gpus" type="number" min="1" max="4" value="1" required />
+              </label>
+              <label>
+                预计时长
+                <input name="hours" type="number" min="1" max="168" value="14" required />
+              </label>
+              <label>
+                紧急程度
+                <select name="urgency">
+                  <option value="5">论文截稿</option>
+                  <option value="4">导师周会</option>
+                  <option value="3" selected>常规实验</option>
+                  <option value="2">探索验证</option>
+                </select>
+              </label>
+              <label>
+                镜像模板
+                <select name="image">
+                  <option value="pytorch-2.3-cuda12">PyTorch 2.3 + CUDA 12</option>
+                  <option value="pytorch-1.13-cuda11">PyTorch 1.13 + CUDA 11</option>
+                  <option value="tensorflow-2.16">TensorFlow 2.16</option>
+                </select>
+              </label>
+              <label class="wide">
+                数据集挂载
+                <input name="dataset" value="/datasets/medical-seg" />
+              </label>
+              <button class="primary-button" type="submit">提交申请</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">队列</p>
+                <h2>信用调度</h2>
+              </div>
+              <button id="autoScheduleBtn" class="secondary-button" type="button">自动调度</button>
+            </div>
+            <div id="requestQueue" class="queue-list"></div>
+          </div>
+        </section>
+
+        <section id="sandboxes" class="section-band">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">容器</p>
+                <h2>实验环境沙箱</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>容器</th>
+                    <th>负责人</th>
+                    <th>节点</th>
+                    <th>GPU</th>
+                    <th>端口</th>
+                    <th>镜像</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="sandboxTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="rotation" class="section-band two-column">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">WBS</p>
+                <h2>轮转进度</h2>
+              </div>
+            </div>
+            <div id="rotationList" class="rotation-list"></div>
+          </div>
+
+          <div class="panel compact-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">评价</p>
+                <h2>导师评分</h2>
+              </div>
+            </div>
+            <form id="evaluationForm" class="evaluation-form">
+              <label>
+                学生
+                <select name="student" id="evaluationStudent"></select>
+              </label>
+              <label>
+                代码提交
+                <input name="code" type="range" min="0" max="100" value="82" />
+              </label>
+              <label>
+                算力效率
+                <input name="efficiency" type="range" min="0" max="100" value="76" />
+              </label>
+              <label>
+                按期完成
+                <input name="delivery" type="range" min="0" max="100" value="88" />
+              </label>
+              <button class="primary-button" type="submit">保存评分</button>
+            </form>
+            <div id="evaluationSummary" class="evaluation-summary"></div>
+          </div>
+        </section>
+
+        <section id="knowledge" class="section-band two-column knowledge-layout">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">传承</p>
+                <h2>科研知识图谱</h2>
+              </div>
+              <select id="knowledgeFilter" aria-label="研究方向筛选">
+                <option value="all">全部方向</option>
+                <option value="医学图像分割">医学图像分割</option>
+                <option value="目标检测">目标检测</option>
+                <option value="小模型微调">小模型微调</option>
+              </select>
+            </div>
+            <svg id="knowledgeGraph" class="knowledge-graph" viewBox="0 0 720 360" role="img" aria-label="科研知识图谱"></svg>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">归档</p>
+                <h2>实验日志与经验</h2>
+              </div>
+            </div>
+            <div id="knowledgeList" class="knowledge-list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
