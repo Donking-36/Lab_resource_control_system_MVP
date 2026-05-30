@@ -134,6 +134,14 @@ button {
   font-size: 13px;
 }
 
+.sidebar-hint,
+.panel-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .main {
   display: grid;
   gap: 22px;
@@ -170,6 +178,14 @@ h1 {
   line-height: 1.08;
   letter-spacing: 0;
   overflow-wrap: anywhere;
+}
+
+.scope-note {
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 h2 {
@@ -570,7 +586,7 @@ input[type="range"] {
 
 table {
   width: 100%;
-  min-width: 850px;
+  min-width: 940px;
   border-collapse: collapse;
 }
 

@@ -1,3 +1,4 @@
+// MVP demo data. Replace this state with backend APIs before production use.
 const state = {
   gpuNodes: [
     {
@@ -174,6 +175,8 @@ const state = {
 };
 
 const els = {
+  roleSelect: document.querySelector("#roleSelect"),
+  roleHint: document.querySelector("#roleHint"),
   metricGpuUsage: document.querySelector("#metricGpuUsage"),
   metricContainers: document.querySelector("#metricContainers"),
   metricRisks: document.querySelector("#metricRisks"),
@@ -196,6 +199,21 @@ const modelBaseHours = {
   llm: 0.026,
   classification: 0.006,
 };
+
+const roleHints = {
+  mentor: "导师视角关注进度风险、评分和知识沉淀。",
+  student: "轮转生视角关注算力申请、训练预估和任务推进。",
+  admin: "管理员视角关注节点资源、端口分配和沙箱生命周期。",
+};
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function pct(value, total) {
   if (!total) return 0;
@@ -225,6 +243,10 @@ function getNode(nodeId) {
 
 function getNodeName(nodeId) {
   return getNode(nodeId)?.name ?? "未分配";
+}
+
+function renderRoleHint() {
+  els.roleHint.textContent = roleHints[els.roleSelect.value] ?? roleHints.mentor;
 }
 
 function renderMetrics() {
@@ -290,12 +312,16 @@ function renderRequests() {
   els.requestQueue.innerHTML = queue
     .map((request) => {
       const score = priorityScore(request);
+      const student = escapeHtml(request.student);
+      const topic = escapeHtml(request.topic);
+      const createdAt = escapeHtml(request.createdAt);
+      const image = escapeHtml(request.image);
       return `
         <article class="queue-item">
           <header>
             <div>
-              <h3>${request.student} · ${request.topic}</h3>
-              <p>${request.createdAt} 提交 · ${request.image}</p>
+              <h3>${student} · ${topic}</h3>
+              <p>${createdAt} 提交 · ${image}</p>
             </div>
             <span class="chip">${score} 分</span>
           </header>
@@ -319,22 +345,27 @@ function renderSandboxes() {
   els.sandboxTable.innerHTML = state.sandboxes
     .map((box) => {
       const statusClass = box.status === "running" ? "chip" : "chip amber";
+      const boxId = escapeHtml(box.id);
+      const student = escapeHtml(box.student);
+      const nodeName = escapeHtml(getNodeName(box.nodeId));
+      const image = escapeHtml(box.image);
       return `
         <tr>
-          <td>${box.id}</td>
-          <td>${box.student}</td>
-          <td>${getNodeName(box.nodeId)}</td>
+          <td>${boxId}</td>
+          <td>${student}</td>
+          <td>${nodeName}</td>
           <td>${box.gpus}</td>
           <td>${box.port}</td>
-          <td>${box.image}</td>
+          <td>${image}</td>
+          <td>${box.snapshots}</td>
           <td><span class="${statusClass}">${box.status === "running" ? "运行中" : "已暂停"}</span></td>
           <td>
             <div class="sandbox-actions">
-              <button class="small-button" type="button" data-action="snapshot" data-id="${box.id}">快照</button>
-              <button class="small-button" type="button" data-action="toggle" data-id="${box.id}">
+              <button class="small-button" type="button" data-action="snapshot" data-id="${boxId}">快照</button>
+              <button class="small-button" type="button" data-action="toggle" data-id="${boxId}">
                 ${box.status === "running" ? "暂停" : "恢复"}
               </button>
-              <button class="small-button danger" type="button" data-action="release" data-id="${box.id}">释放</button>
+              <button class="small-button danger" type="button" data-action="release" data-id="${boxId}">释放</button>
             </div>
           </td>
         </tr>
@@ -350,11 +381,13 @@ function renderRotations() {
         rotation.stages.reduce((sum, stage) => sum + stage.progress, 0) / rotation.stages.length,
       );
       const risky = rotation.gpuHours > 60 && rotation.lastUpdateDays >= 5;
+      const student = escapeHtml(rotation.student);
+      const topic = escapeHtml(rotation.topic);
       const stageRows = rotation.stages
         .map(
           (stage) => `
             <div class="gantt-row">
-              <span>${stage.name}</span>
+              <span>${escapeHtml(stage.name)}</span>
               <div class="timeline"><i class="${stage.progress ? "" : "pending"}" style="width:${stage.progress}%"></i></div>
               <span>${stage.progress}%</span>
             </div>
@@ -365,7 +398,7 @@ function renderRotations() {
         <article class="rotation-card">
           <header>
             <div>
-              <h3>${rotation.student} · ${rotation.topic}</h3>
+              <h3>${student} · ${topic}</h3>
               <p>GPU ${rotation.gpuHours} 小时 · ${rotation.lastUpdateDays} 天未更新 · 总进度 ${avgProgress}%</p>
             </div>
             <span class="${risky ? "chip amber" : "chip"}">${risky ? "触发提醒" : "进度正常"}</span>
@@ -383,12 +416,14 @@ function renderRotations() {
 
 function renderEvaluations() {
   const students = state.rotations.map((rotation) => rotation.student);
-  els.evaluationStudent.innerHTML = students.map((student) => `<option value="${student}">${student}</option>`).join("");
+  els.evaluationStudent.innerHTML = students
+    .map((student) => `<option value="${escapeHtml(student)}">${escapeHtml(student)}</option>`)
+    .join("");
   els.evaluationSummary.innerHTML = state.evaluations
     .map(
       (item) => `
         <div class="evaluation-item">
-          <strong>${item.student} · 综合 ${item.score}</strong>
+          <strong>${escapeHtml(item.student)} · 综合 ${item.score}</strong>
           <div class="score-line"><span>代码提交</span><span>${item.code}</span></div>
           <div class="score-line"><span>算力效率</span><span>${item.efficiency}</span></div>
           <div class="score-line"><span>按期完成</span><span>${item.delivery}</span></div>
@@ -408,14 +443,14 @@ function renderKnowledge() {
         <article class="knowledge-item">
           <header>
             <div>
-              <h3>${item.topic}</h3>
-              <p>${item.owner} 接续 ${item.ancestor}</p>
+              <h3>${escapeHtml(item.topic)}</h3>
+              <p>${escapeHtml(item.owner)} 接续 ${escapeHtml(item.ancestor)}</p>
             </div>
-            <span class="chip">${item.repo.split("/").slice(-1)[0]}</span>
+            <span class="chip">${escapeHtml(item.repo.split("/").slice(-1)[0])}</span>
           </header>
-          <p><strong>问题：</strong>${item.issue}</p>
-          <p><strong>方案：</strong>${item.solution}</p>
-          <p><strong>代码：</strong>${item.repo}</p>
+          <p><strong>问题：</strong>${escapeHtml(item.issue)}</p>
+          <p><strong>方案：</strong>${escapeHtml(item.solution)}</p>
+          <p><strong>代码：</strong>${escapeHtml(item.repo)}</p>
         </article>
       `,
     )
@@ -450,7 +485,7 @@ function renderKnowledgeGraph(records) {
       (node) => `
         <g>
           <circle class="graph-node ${node.type}" cx="${node.x}" cy="${node.y}" r="34"></circle>
-          <text class="graph-label" x="${node.x}" y="${node.y + 5}">${node.label}</text>
+          <text class="graph-label" x="${node.x}" y="${node.y + 5}">${escapeHtml(node.label)}</text>
         </g>
       `,
     )
@@ -554,6 +589,7 @@ function snapshotSandbox(boxId) {
   if (!box) return;
   box.snapshots += 1;
   showToast(`${box.student} 的环境快照已生成，第 ${box.snapshots} 版。`);
+  renderAll();
 }
 
 function progressRotation(index) {
@@ -601,15 +637,24 @@ function saveEvaluation(event) {
 function submitRequest(event) {
   event.preventDefault();
   const formData = new FormData(event.currentTarget);
+  const student = formData.get("student").trim();
+  const topic = formData.get("topic").trim();
+  const dataset = formData.get("dataset").trim();
+
+  if (!student || !topic || !dataset) {
+    showToast("请补全学生、研究方向和数据集挂载路径。");
+    return;
+  }
+
   const request = {
     id: Date.now(),
-    student: formData.get("student").trim(),
-    topic: formData.get("topic").trim(),
+    student,
+    topic,
     gpus: Number(formData.get("gpus")),
     hours: Number(formData.get("hours")),
     urgency: Number(formData.get("urgency")),
     image: formData.get("image"),
-    dataset: formData.get("dataset").trim(),
+    dataset,
     credit: 80 + Math.floor(Math.random() * 18),
     status: "waiting",
     createdAt: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
@@ -642,6 +687,7 @@ function bindEvents() {
   document.querySelector("#evaluationForm").addEventListener("submit", saveEvaluation);
   document.querySelector("#autoScheduleBtn").addEventListener("click", autoSchedule);
   document.querySelector("#refreshBtn").addEventListener("click", jitterResources);
+  els.roleSelect.addEventListener("change", renderRoleHint);
   document.querySelector("#knowledgeFilter").addEventListener("change", renderKnowledge);
   document.querySelector("#globalSearch").addEventListener("input", applySearch);
   ["#modelType", "#datasetSize", "#epochCount"].forEach((selector) => {
@@ -674,6 +720,7 @@ function bindEvents() {
 }
 
 function renderAll() {
+  renderRoleHint();
   renderMetrics();
   renderGpuGrid();
   renderRequests();

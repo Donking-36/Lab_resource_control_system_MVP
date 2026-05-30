@@ -33,6 +33,7 @@
             <option value="student">轮转生</option>
             <option value="admin">管理员</option>
           </select>
+          <p id="roleHint" class="sidebar-hint"></p>
         </section>
       </aside>
 
@@ -41,6 +42,7 @@
           <div>
             <p class="eyebrow">AI 科研实验室</p>
             <h1>资源调度与轮转进度工作台</h1>
+            <p class="scope-note">MVP 前端演示版：当前使用模拟数据验证核心流程，暂未接入真实 GPU、Docker、数据库或 GitHub API。</p>
           </div>
           <div class="topbar-actions">
             <label class="search-box">
@@ -177,6 +179,7 @@
               <div>
                 <p class="eyebrow">队列</p>
                 <h2>信用调度</h2>
+                <p class="panel-note">排序参考紧急度、信用分、GPU 数和预计时长，用于演示资源分配依据。</p>
               </div>
               <button id="autoScheduleBtn" class="secondary-button" type="button">自动调度</button>
             </div>
@@ -202,6 +205,7 @@
                     <th>GPU</th>
                     <th>端口</th>
                     <th>镜像</th>
+                    <th>快照</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>

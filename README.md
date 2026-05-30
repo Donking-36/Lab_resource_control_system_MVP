@@ -2,6 +2,8 @@
 
 这是根据项目文档落地的前端 MVP，用于演示 AI 科研实验室中“算力资源分配”和“轮转进度管理”的核心闭环。当前版本不依赖后端和安装包，直接打开 `index.html` 即可运行。
 
+> 当前系统是 MVP 演示版：GPU 状态、调度队列、容器沙箱、导师评分和知识图谱均使用 `app.js` 中的模拟数据与前端状态流转。它用于验证核心业务流程和交互价值，尚未接入真实 GPU 监控、Docker/Kubernetes、数据库、登录权限或 GitHub API。
+
 ## MVP 范围
 
 - GPU 算力大盘：展示节点 GPU 占用、显存占用、空闲端口和挂载目录。
@@ -12,12 +14,18 @@
 - 导师评价：按代码提交、算力效率、按期完成三个维度生成综合评分。
 - 科研知识图谱：按研究方向展示历史接力关系、典型问题、解决方案和代码分支。
 
+## 提交材料
+
+- [MVP 需求优先级清单](requirements-priority.md)
+- [用户验证与反馈报告](validation-feedback-report.md)
+- [测试与部署说明](testing-deployment.md)
+
 ## 运行方式
 
 在浏览器中打开：
 
 ```text
-E:\codesource\MVP\index.html
+E:\Lab_resource_control_system_MVP\index.html
 ```
 
 也可以在本目录启动任意静态文件服务，但不是必需的。
