@@ -2,48 +2,50 @@
 
 ## 1. 系统形态
 
-当前 MVP 是纯静态前端应用，包含以下文件：
+当前 MVP 是前后端一体的轻量工程版，包含以下文件：
 
 - `index.html`：页面结构和功能入口。
 - `styles.css`：响应式布局和视觉样式。
-- `app.js`：模拟数据、前端状态和交互逻辑。
+- `app.js`：前端渲染、交互逻辑和后端 API 调用。
+- `server.js`：Node HTTP 后端、SQLite 数据库读写、静态文件托管和 `nvidia-smi` GPU 监控。
+- `package.json`：启动脚本和 Node 版本要求。
 - `mvp-screenshot.png`、`mvp-mobile.png`：桌面端和移动端预览图。
 
-当前版本不需要安装依赖，不需要数据库，不需要后端服务，也不会真实调用 GPU、Docker、Kubernetes 或 GitHub API。
+当前版本不需要安装第三方依赖。数据库使用 Node 24 内置 `node:sqlite`，启动时自动生成 `data/lab_resource.db`。GPU 状态优先调用本机或服务器的 `nvidia-smi`，失败时回退到数据库种子节点。
 
 ## 2. 本地运行
 
-方式一：直接打开文件。
-
-```text
-E:\Lab_resource_control_system_MVP\index.html
-```
-
-方式二：启动任意静态文件服务。例如在仓库目录执行：
+在仓库目录执行：
 
 ```powershell
-python -m http.server 8000
+npm start
 ```
 
 然后访问：
 
 ```text
-http://localhost:8000
+http://localhost:3000
+```
+
+可选端口：
+
+```powershell
+$env:PORT=3130; npm start
 ```
 
 ## 3. 手工验收用例
 
 | 用例 | 操作 | 期望结果 |
 | --- | --- | --- |
-| T1 页面加载 | 打开 `index.html` | 页面展示总览、GPU 大盘、申请、沙箱、轮转、知识图谱等模块 |
-| T2 GPU 大盘 | 查看 GPU 卡片 | 能看到节点名称、GPU 占用、显存占用、空闲端口和挂载目录 |
+| T1 页面加载 | 启动 `npm start` 并打开 `http://localhost:3000` | 页面展示总览、GPU 大盘、申请、沙箱、轮转、知识图谱等模块 |
+| T2 GPU 大盘 | 查看 GPU 卡片 | 能看到真实 `nvidia-smi` GPU 或数据库回退节点、显存占用、空闲端口和挂载目录 |
 | T3 训练预测 | 修改模型类型、数据量、epoch | 预计训练时长随输入变化，超过阈值时出现拆分建议 |
-| T4 申请提交 | 填写并提交算力申请 | 新申请进入信用调度队列 |
-| T5 信用调度 | 点击自动调度或批准分配 | 申请变为沙箱记录，队列数量减少，资源占用更新 |
-| T6 沙箱操作 | 点击暂停、恢复、快照、释放 | 状态、快照版本或资源释放结果正确显示 |
-| T7 WBS 进度 | 点击推进节点 | 当前学生的阶段进度增加，最近更新时间归零 |
+| T4 申请提交 | 填写并提交算力申请 | 新申请写入 SQLite，并进入信用调度队列 |
+| T5 信用调度 | 点击自动调度或批准分配 | 后端生成沙箱记录，队列数量减少，资源占用更新 |
+| T6 沙箱操作 | 点击暂停、恢复、快照、释放 | 数据库中的状态、快照版本或资源释放结果正确更新 |
+| T7 WBS 进度 | 点击推进节点 | 当前学生的阶段进度写入 SQLite，最近更新时间归零 |
 | T8 风险提醒 | 查看长时间占用 GPU 且未更新的学生 | 展示“触发提醒”标记 |
-| T9 导师评分 | 调整评分滑块并保存 | 评分列表更新综合分 |
+| T9 导师评分 | 调整评分滑块并保存 | 评分列表更新综合分，刷新后仍保留 |
 | T10 知识图谱 | 切换研究方向筛选 | 图谱和经验列表只展示对应方向 |
 | T11 搜索 | 在顶部搜索学生、课题或方向 | 队列、进度和知识卡片按关键词过滤 |
 | T12 响应式 | 在移动端宽度打开页面 | 导航和内容变为单列或双列布局，无明显横向遮挡 |
@@ -54,56 +56,73 @@ http://localhost:8000
 已执行 JavaScript 语法检查：
 
 ```powershell
+node --check server.js
 node --check app.js
 ```
 
 结果：通过，无语法错误。
 
-当前还完成了人工代码走查：确认 MVP 页面已显式标注模拟边界，沙箱快照版本可见，信用调度说明已补充，用户输入在列表渲染前会进行 HTML 转义。
+已执行后端接口检查：
+
+```powershell
+Invoke-RestMethod http://localhost:3133/api/state
+```
+
+结果：接口返回 GPU 节点、申请、沙箱、轮转、评分和知识条目；在当前机器上识别到 `nvidia-smi` 来源的 NVIDIA GPU。
+
+当前还完成了人工代码走查：确认 MVP 页面已显式标注工程边界，沙箱快照版本可见，信用调度说明已补充，用户输入在列表渲染前会进行 HTML 转义。
 
 ## 5. 静态部署
 
-本项目可部署到任意静态托管服务：
+本项目现在需要 Node 后端，不再适合只部署到纯静态托管服务。可部署到以下环境：
 
-- GitHub Pages
-- Nginx 静态目录
-- Vercel/Netlify 静态站点
-- 校内服务器静态文件目录
+- 安装了 Node 24+ 的实验室服务器。
+- 能运行 `nvidia-smi` 的 GPU 节点或监控代理服务器。
+- 校内虚拟机或云服务器。
 
 部署步骤：
 
-1. 将仓库文件上传到静态站点根目录。
-2. 确保 `index.html`、`styles.css`、`app.js` 和两张截图位于同一目录。
-3. 用浏览器访问站点首页。
+1. 将仓库文件上传到服务器。
+2. 确认 Node.js 版本为 24 或更高。
+3. 在仓库目录执行 `npm start`。
+4. 访问 `http://服务器地址:3000`。
+5. 如需后台运行，可用系统服务、PM2 或学校服务器提供的进程管理工具托管 `node server.js`。
 
-## 6. GitHub Pages 部署建议
+## 6. API 说明
 
-如果使用 GitHub Pages：
-
-1. 打开仓库 Settings。
-2. 进入 Pages。
-3. Source 选择 `Deploy from a branch`。
-4. Branch 选择 `main`，目录选择 `/root`。
-5. 保存后等待 GitHub 生成访问地址。
+- `GET /api/health`：后端健康检查。
+- `GET /api/state`：一次性返回页面所需全部数据。
+- `GET /api/gpu-nodes`：刷新 GPU 监控数据。
+- `POST /api/requests`：创建算力申请。
+- `POST /api/requests/:id/approve`：批准申请并生成沙箱记录。
+- `POST /api/requests/:id/reject`：驳回申请。
+- `POST /api/sandboxes/:id/toggle`：暂停或恢复沙箱记录。
+- `POST /api/sandboxes/:id/snapshot`：增加快照版本。
+- `DELETE /api/sandboxes/:id`：释放沙箱记录和端口。
+- `POST /api/rotations/:id/progress`：推进 WBS 节点。
+- `POST /api/rotations/:id/remind`：记录进度提醒。
+- `POST /api/evaluations`：保存导师评分。
 
 ## 7. MVP 演示边界
 
-以下能力在当前版本中是模拟功能：
+以下能力在当前版本中已经是真实工程能力：
 
-- GPU 占用率、显存、空闲端口、挂载目录。
+- Node 后端 API。
+- SQLite 数据库持久化。
+- `nvidia-smi` GPU 状态读取。
+- 申请、审批、沙箱记录、WBS 进度、评分和知识条目的持久化读写。
+
+以下能力仍是 MVP 演示或规则模拟：
+
 - 训练时长预测。
-- 信用分和调度排序。
-- 容器创建、暂停、恢复、快照、释放。
-- WBS 进度提醒。
-- 导师评分保存。
-- 知识图谱、历史报错、解决方案和代码分支。
+- 信用分生成和调度排序。
+- 容器创建、暂停、恢复、快照、释放对应的是数据库记录变化，尚未调用 Docker/Kubernetes。
+- WBS 进度提醒尚未接入真实消息通知。
+- 知识图谱展示使用数据库样例，尚未接入 GitHub 自动归档。
 
 以下能力尚未实现：
 
-- 后端 API。
-- 数据库持久化。
 - 登录和权限控制。
-- 真实 GPU 监控。
 - 真实 Docker/Kubernetes 编排。
 - GitHub 自动归档。
 - 自动化测试和 CI。
