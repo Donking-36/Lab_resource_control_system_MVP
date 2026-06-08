@@ -205,7 +205,7 @@ function renderRequests() {
 
 function renderSandboxes() {
   if (!state.sandboxes.length) {
-    els.sandboxTable.innerHTML = `<tr><td colspan="9">暂无运行中的沙箱记录。</td></tr>`;
+    els.sandboxTable.innerHTML = `<tr><td colspan="12">暂无运行中的沙箱记录。</td></tr>`;
     return;
   }
 
@@ -215,13 +215,16 @@ function renderSandboxes() {
       return `
         <tr>
           <td>${escapeHtml(box.id)}</td>
+          <td>${escapeHtml(box.containerShortId || "未创建")}</td>
           <td>${escapeHtml(box.student)}</td>
           <td>${escapeHtml(getNodeName(box.nodeId))}</td>
           <td>${box.gpus}</td>
-          <td>${box.port}</td>
+          <td>${box.hostPort || box.port}:${box.containerPort || 8888}</td>
           <td>${escapeHtml(box.image)}</td>
-          <td>${box.snapshots}</td>
+          <td>${box.snapshots}${box.snapshotImage ? ` · ${escapeHtml(box.snapshotImage)}` : ""}</td>
           <td><span class="${statusClass}">${box.status === "running" ? "运行中" : "已暂停"}</span></td>
+          <td>${escapeHtml(box.containerStatus || "未知")}</td>
+          <td>${escapeHtml(box.lastError || "-")}</td>
           <td>
             <div class="sandbox-actions">
               <button class="small-button" type="button" data-action="snapshot" data-id="${escapeHtml(box.id)}">快照</button>

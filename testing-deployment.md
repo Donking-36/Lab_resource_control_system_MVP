@@ -13,6 +13,8 @@
 
 当前版本不需要安装第三方依赖。数据库使用 Node 24 内置 `node:sqlite`，启动时自动生成 `data/lab_resource.db`。GPU 状态优先调用本机或服务器的 `nvidia-smi`，失败时回退到数据库种子节点。
 
+真实容器编排需要额外安装 Docker。GPU 容器需要 NVIDIA 驱动和 NVIDIA Container Toolkit。
+
 ## 2. 本地运行
 
 在仓库目录执行：
@@ -42,7 +44,7 @@ $env:PORT=3130; npm start
 | T3 训练预测 | 修改模型类型、数据量、epoch | 预计训练时长随输入变化，超过阈值时出现拆分建议 |
 | T4 申请提交 | 填写并提交算力申请 | 新申请写入 SQLite，并进入信用调度队列 |
 | T5 信用调度 | 点击自动调度或批准分配 | 后端生成沙箱记录，队列数量减少，资源占用更新 |
-| T6 沙箱操作 | 点击暂停、恢复、快照、释放 | 数据库中的状态、快照版本或资源释放结果正确更新 |
+| T6 沙箱操作 | 点击暂停、恢复、快照、释放 | Docker 容器状态、快照镜像和数据库记录同步更新；未安装 Docker 时显示明确错误 |
 | T7 WBS 进度 | 点击推进节点 | 当前学生的阶段进度写入 SQLite，最近更新时间归零 |
 | T8 风险提醒 | 查看长时间占用 GPU 且未更新的学生 | 展示“触发提醒”标记 |
 | T9 导师评分 | 调整评分滑块并保存 | 评分列表更新综合分，刷新后仍保留 |
@@ -69,6 +71,14 @@ Invoke-RestMethod http://localhost:3133/api/state
 ```
 
 结果：接口返回 GPU 节点、申请、沙箱、轮转、评分和知识条目；在当前机器上识别到 `nvidia-smi` 来源的 NVIDIA GPU。
+
+当前环境未检测到 Docker CLI，因此真实容器创建需要在安装 Docker 的服务器上执行以下验收：
+
+```powershell
+docker --version
+docker info
+docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
+```
 
 当前还完成了人工代码走查：确认 MVP 页面已显式标注工程边界，沙箱快照版本可见，信用调度说明已补充，用户输入在列表渲染前会进行 HTML 转义。
 
@@ -111,19 +121,19 @@ Invoke-RestMethod http://localhost:3133/api/state
 - SQLite 数据库持久化。
 - `nvidia-smi` GPU 状态读取。
 - 申请、审批、沙箱记录、WBS 进度、评分和知识条目的持久化读写。
+- Docker CLI 容器创建、暂停、恢复、快照、释放调用。
 
 以下能力仍是 MVP 演示或规则模拟：
 
 - 训练时长预测。
 - 信用分生成和调度排序。
-- 容器创建、暂停、恢复、快照、释放对应的是数据库记录变化，尚未调用 Docker/Kubernetes。
 - WBS 进度提醒尚未接入真实消息通知。
 - 知识图谱展示使用数据库样例，尚未接入 GitHub 自动归档。
 
 以下能力尚未实现：
 
 - 登录和权限控制。
-- 真实 Docker/Kubernetes 编排。
+- Kubernetes 集群编排。
 - GitHub 自动归档。
 - 自动化测试和 CI。
 

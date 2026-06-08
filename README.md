@@ -36,6 +36,8 @@ http://localhost:3000
 
 数据库会自动生成在 `data/lab_resource.db`。需要 Node.js 24 或更高版本，因为本项目使用内置 `node:sqlite`。
 
+如需启用真实容器编排，还需要服务器安装 Docker，并确保 `docker` 命令可用。GPU 容器还需要 NVIDIA Container Toolkit。
+
 ## 预览
 
 桌面端：
@@ -46,9 +48,19 @@ http://localhost:3000
 
 ![移动端预览](mvp-mobile.png)
 
+## Docker 编排说明
+
+当前后端已接入 Docker CLI：
+
+- 批准申请时执行 `docker run -d` 创建容器。
+- 暂停/恢复时执行 `docker pause` / `docker unpause`。
+- 快照时执行 `docker commit` 生成 `lab-snapshot:*` 镜像。
+- 释放时执行 `docker rm -f` 删除容器。
+
+本机未安装 Docker 时，相关 API 会返回明确错误，不会伪造容器成功状态。
+
 ## 后续接入点
 
-- 沙箱操作可对接 Docker Engine API 或 Kubernetes Job。
 - 日志与代码归档可对接 GitHub API，并把知识条目持久化到数据库。
 - 训练时长预测可替换为基于历史任务的回归模型。
 - 用户登录与权限可接入学校统一身份认证或实验室账号体系。

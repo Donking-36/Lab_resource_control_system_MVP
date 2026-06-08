@@ -9,6 +9,13 @@ const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
 const DB_PATH = process.env.LAB_MVP_DB || path.join(DATA_DIR, "lab_resource.db");
 const PORT = Number(process.env.PORT || 3000);
+const CONTAINER_PORT = Number(process.env.LAB_CONTAINER_PORT || 8888);
+
+const IMAGE_TEMPLATES = {
+  "pytorch-2.3-cuda12": "pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime",
+  "pytorch-1.13-cuda11": "pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime",
+  "tensorflow-2.16": "tensorflow/tensorflow:2.16.1-gpu",
+};
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -17,6 +24,136 @@ db.exec("PRAGMA foreign_keys = ON");
 
 function nowText() {
   return new Date().toLocaleString("zh-CN", { hour12: false });
+}
+
+function runDocker(args, options = {}) {
+  return execFileSync("docker", args, {
+    encoding: "utf8",
+    timeout: options.timeout || 30000,
+    windowsHide: true,
+  }).trim();
+}
+
+function tryDocker(args, options = {}) {
+  try {
+    return { ok: true, output: runDocker(args, options) };
+  } catch (error) {
+    return { ok: false, error: dockerErrorMessage(error) };
+  }
+}
+
+function dockerErrorMessage(error) {
+  const stderr = String(error.stderr || "").trim();
+  const stdout = String(error.stdout || "").trim();
+  const message = stderr || stdout || error.message || "Docker 命令执行失败";
+  if (message.includes("not recognized") || message.includes("ENOENT") || message.includes("无法将")) {
+    return "未检测到 Docker CLI，请先安装 Docker 并确保 docker 命令在 PATH 中可用。";
+  }
+  return message;
+}
+
+function getDockerHealth() {
+  const version = tryDocker(["--version"], { timeout: 5000 });
+  if (!version.ok) return { available: false, error: version.error };
+
+  const server = tryDocker(["info", "--format", "{{.ServerVersion}}"], { timeout: 8000 });
+  if (!server.ok) return { available: false, cli: version.output, error: server.error };
+
+  return { available: true, cli: version.output, server: server.output };
+}
+
+function resolveDockerImage(image) {
+  return IMAGE_TEMPLATES[image] || image;
+}
+
+function makeContainerName(requestId) {
+  return `lab-rot-${requestId}`;
+}
+
+function normalizeMountPath(dataset) {
+  return path.resolve(dataset);
+}
+
+function assertMountPath(dataset) {
+  const mountPath = normalizeMountPath(dataset);
+  if (!fs.existsSync(mountPath)) {
+    throw new HttpError(409, `数据集挂载路径不存在：${mountPath}`);
+  }
+  return mountPath;
+}
+
+function createDockerContainer({ request, port, name }) {
+  const image = resolveDockerImage(request.image);
+  const mountPath = assertMountPath(request.dataset);
+  const existing = tryDocker(["rm", "-f", name], { timeout: 15000 });
+  if (!existing.ok && !existing.error.includes("No such container")) {
+    throw new HttpError(500, existing.error);
+  }
+
+  const args = [
+    "run",
+    "-d",
+    "--name",
+    name,
+    "-p",
+    `${port}:${CONTAINER_PORT}`,
+    "-v",
+    `${mountPath}:/workspace/dataset:ro`,
+    "-w",
+    "/workspace",
+  ];
+
+  if (request.gpus > 0) {
+    args.push("--gpus", "all");
+  }
+
+  args.push(image, "sh", "-lc", "sleep infinity");
+
+  try {
+    return {
+      containerId: runDocker(args, { timeout: 120000 }),
+      containerName: name,
+      image,
+      mountPath,
+      containerPort: CONTAINER_PORT,
+    };
+  } catch (error) {
+    throw new HttpError(500, dockerErrorMessage(error));
+  }
+}
+
+function inspectContainerStatus(containerId) {
+  if (!containerId) return "未创建";
+  const result = tryDocker(["inspect", "-f", "{{.State.Status}}", containerId], { timeout: 8000 });
+  return result.ok ? result.output : "未知";
+}
+
+function pauseContainer(box) {
+  if (!box.container_id) return;
+  const result = tryDocker(["pause", box.container_id], { timeout: 15000 });
+  if (!result.ok) throw new HttpError(500, result.error);
+}
+
+function unpauseContainer(box) {
+  if (!box.container_id) return;
+  const result = tryDocker(["unpause", box.container_id], { timeout: 15000 });
+  if (!result.ok) throw new HttpError(500, result.error);
+}
+
+function removeContainer(box) {
+  if (!box.container_id) return;
+  const result = tryDocker(["rm", "-f", box.container_id], { timeout: 30000 });
+  if (!result.ok && !result.error.includes("No such container")) {
+    throw new HttpError(500, result.error);
+  }
+}
+
+function commitContainer(box, nextVersion) {
+  if (!box.container_id) return "";
+  const snapshotImage = `lab-snapshot:${box.id}-${nextVersion}`;
+  const result = tryDocker(["commit", box.container_id, snapshotImage], { timeout: 60000 });
+  if (!result.ok) throw new HttpError(500, result.error);
+  return snapshotImage;
 }
 
 function createSchema() {
@@ -58,7 +195,15 @@ function createSchema() {
       image TEXT NOT NULL,
       dataset TEXT NOT NULL,
       status TEXT NOT NULL,
-      snapshots INTEGER NOT NULL DEFAULT 0
+      snapshots INTEGER NOT NULL DEFAULT 0,
+      container_id TEXT NOT NULL DEFAULT '',
+      container_name TEXT NOT NULL DEFAULT '',
+      host_port INTEGER NOT NULL DEFAULT 0,
+      container_port INTEGER NOT NULL DEFAULT 8888,
+      mount_path TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT '',
+      last_error TEXT NOT NULL DEFAULT '',
+      snapshot_image TEXT NOT NULL DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS rotations (
@@ -97,6 +242,26 @@ function createSchema() {
       repo TEXT NOT NULL
     );
   `);
+}
+
+function migrateSchema() {
+  const columns = db.prepare("PRAGMA table_info(sandboxes)").all().map((column) => column.name);
+  const migrations = [
+    ["container_id", "TEXT NOT NULL DEFAULT ''"],
+    ["container_name", "TEXT NOT NULL DEFAULT ''"],
+    ["host_port", "INTEGER NOT NULL DEFAULT 0"],
+    ["container_port", "INTEGER NOT NULL DEFAULT 8888"],
+    ["mount_path", "TEXT NOT NULL DEFAULT ''"],
+    ["created_at", "TEXT NOT NULL DEFAULT ''"],
+    ["last_error", "TEXT NOT NULL DEFAULT ''"],
+    ["snapshot_image", "TEXT NOT NULL DEFAULT ''"],
+  ];
+
+  migrations.forEach(([name, definition]) => {
+    if (!columns.includes(name)) {
+      db.exec(`ALTER TABLE sandboxes ADD COLUMN ${name} ${definition}`);
+    }
+  });
 }
 
 function insertGpuNode(node) {
@@ -413,6 +578,16 @@ function getSandboxes() {
       dataset: row.dataset,
       status: row.status,
       snapshots: row.snapshots,
+      containerId: row.container_id,
+      containerShortId: row.container_id ? row.container_id.slice(0, 12) : "",
+      containerName: row.container_name,
+      hostPort: row.host_port || row.port,
+      containerPort: row.container_port || CONTAINER_PORT,
+      mountPath: row.mount_path,
+      createdAt: row.created_at,
+      lastError: row.last_error,
+      snapshotImage: row.snapshot_image,
+      containerStatus: inspectContainerStatus(row.container_id),
     }));
 }
 
@@ -536,6 +711,12 @@ function approveRequest(id) {
 
   const ports = [...node.ports];
   const port = ports.shift();
+  const container = createDockerContainer({
+    request,
+    port,
+    name: makeContainerName(id),
+  });
+
   db.exec("BEGIN");
   try {
     db.prepare("UPDATE gpu_nodes SET used_gpu = ?, memory_used = ?, ports_json = ?, updated_at = ? WHERE id = ?").run(
@@ -547,12 +728,30 @@ function approveRequest(id) {
     );
     db.prepare("UPDATE requests SET status = 'allocated' WHERE id = ?").run(id);
     db.prepare(`
-      INSERT OR REPLACE INTO sandboxes (id, student, node_id, gpus, port, image, dataset, status, snapshots)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'running', 0)
-    `).run(`lab-rot-${id}`, request.student, node.id, request.gpus, port, request.image, request.dataset);
+      INSERT OR REPLACE INTO sandboxes (
+        id, student, node_id, gpus, port, image, dataset, status, snapshots,
+        container_id, container_name, host_port, container_port, mount_path, created_at, last_error, snapshot_image
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'running', 0, ?, ?, ?, ?, ?, ?, '', '')
+    `).run(
+      `lab-rot-${id}`,
+      request.student,
+      node.id,
+      request.gpus,
+      port,
+      container.image,
+      request.dataset,
+      container.containerId,
+      container.containerName,
+      port,
+      container.containerPort,
+      container.mountPath,
+      nowText(),
+    );
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");
+    removeContainer({ container_id: container.containerId });
     throw error;
   }
 }
@@ -566,6 +765,13 @@ function releaseSandbox(id) {
   const box = db.prepare("SELECT * FROM sandboxes WHERE id = ?").get(id);
   if (!box) throw new HttpError(404, "沙箱不存在");
   const node = db.prepare("SELECT * FROM gpu_nodes WHERE id = ?").get(box.node_id);
+  try {
+    removeContainer(box);
+  } catch (error) {
+    db.prepare("UPDATE sandboxes SET last_error = ? WHERE id = ?").run(error.message, id);
+    throw error;
+  }
+
   db.exec("BEGIN");
   try {
     if (node) {
@@ -589,15 +795,34 @@ function releaseSandbox(id) {
 }
 
 function toggleSandbox(id) {
-  const box = db.prepare("SELECT status FROM sandboxes WHERE id = ?").get(id);
+  const box = db.prepare("SELECT * FROM sandboxes WHERE id = ?").get(id);
   if (!box) throw new HttpError(404, "沙箱不存在");
   const status = box.status === "running" ? "paused" : "running";
-  db.prepare("UPDATE sandboxes SET status = ? WHERE id = ?").run(status, id);
+  try {
+    if (status === "paused") pauseContainer(box);
+    if (status === "running") unpauseContainer(box);
+    db.prepare("UPDATE sandboxes SET status = ?, last_error = '' WHERE id = ?").run(status, id);
+  } catch (error) {
+    db.prepare("UPDATE sandboxes SET last_error = ? WHERE id = ?").run(error.message, id);
+    throw error;
+  }
 }
 
 function snapshotSandbox(id) {
-  const result = db.prepare("UPDATE sandboxes SET snapshots = snapshots + 1 WHERE id = ?").run(id);
-  if (!result.changes) throw new HttpError(404, "沙箱不存在");
+  const box = db.prepare("SELECT * FROM sandboxes WHERE id = ?").get(id);
+  if (!box) throw new HttpError(404, "沙箱不存在");
+  const nextVersion = box.snapshots + 1;
+  try {
+    const snapshotImage = commitContainer(box, nextVersion);
+    db.prepare("UPDATE sandboxes SET snapshots = ?, snapshot_image = ?, last_error = '' WHERE id = ?").run(
+      nextVersion,
+      snapshotImage || box.snapshot_image,
+      id,
+    );
+  } catch (error) {
+    db.prepare("UPDATE sandboxes SET last_error = ? WHERE id = ?").run(error.message, id);
+    throw error;
+  }
 }
 
 function progressRotation(id) {
@@ -638,7 +863,7 @@ function saveEvaluation(body) {
 
 async function handleApi(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/health") {
-    json(res, 200, { ok: true, database: DB_PATH, time: nowText() });
+    json(res, 200, { ok: true, database: DB_PATH, docker: getDockerHealth(), time: nowText() });
     return;
   }
   if (req.method === "GET" && pathname === "/api/state") {
@@ -749,6 +974,7 @@ async function handleRequest(req, res) {
 }
 
 createSchema();
+migrateSchema();
 seedData();
 
 http.createServer(handleRequest).listen(PORT, () => {
