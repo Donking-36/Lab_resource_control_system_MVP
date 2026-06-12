@@ -5,7 +5,9 @@
   "description": "实验室资源与轮转进度管理系统 MVP，包含静态前端、Node 后端、SQLite 持久化和 nvidia-smi GPU 监控。",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check app.js"
+    "check": "node --check server.js && node --check app.js && node --check tests/api.test.js",
+    "test:api": "node tests/api.test.js",
+    "test": "npm run check && npm run test:api"
   },
   "engines": {
     "node": ">=24.0.0"
