@@ -127,7 +127,7 @@ http://localhost:3000
 ### 5.3 创建容器
 
 1. 在页面提交一条算力申请。
-2. 点击批准或自动调度。
+2. 镜像模板建议选择“轻量 Docker 演示（busybox）”，点击批准或自动调度。
 3. 在沙箱表格查看容器 ID、容器名、主机端口、容器端口和 Docker 状态。
 4. 在终端执行：
 
@@ -135,7 +135,7 @@ http://localhost:3000
 docker ps
 ```
 
-验收标准：页面展示的容器 ID 或容器名能在 `docker ps` 中找到。
+验收标准：页面展示的容器 ID 或容器名能在 `docker ps` 中找到。`busybox-demo` 会创建 `busybox:latest` 容器并执行 `sleep 3600`，用于避开 PyTorch/CUDA 大镜像下载问题。
 
 ### 5.4 暂停、恢复、快照、释放
 

@@ -52,6 +52,7 @@ http://localhost:3000
 - 后端 API 与 SQLite：申请、审批、沙箱、进度、评分和知识条目均可持久化。
 - 真实 GPU 监控：有 NVIDIA 驱动时读取 `nvidia-smi`；无 GPU 或读取失败时使用数据库回退数据。
 - Docker 编排接口：批准、暂停、恢复、快照、释放均已调用 Docker CLI。
+- 轻量 Docker 演示镜像：申请表可选择 `busybox-demo`，用于在普通 Docker 环境中验证容器创建、暂停、恢复、快照和释放。
 - 提交文档：需求优先级、验证反馈、测试部署和证据归档说明已补充。
 
 仍需在提交前补齐或现场演示：
@@ -85,7 +86,7 @@ Docker 实机验收建议流程：
 
 1. 运行 `docker --version` 和 `docker info`，截图证明 Docker 可用。
 2. 启动项目并提交一条算力申请。
-3. 点击批准，截图页面中的容器 ID、端口、Docker 状态。
+3. 镜像模板选择“轻量 Docker 演示（busybox）”，点击批准，截图页面中的容器 ID、端口、Docker 状态。
 4. 运行 `docker ps`，截图同名容器 `lab-rot-{requestId}`。
 5. 执行暂停、恢复、快照、释放，并分别截图页面状态、`docker ps` 或 `docker images` 输出。
 

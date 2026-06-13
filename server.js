@@ -12,6 +12,7 @@ const PORT = Number(process.env.PORT || 3000);
 const CONTAINER_PORT = Number(process.env.LAB_CONTAINER_PORT || 8888);
 
 const IMAGE_TEMPLATES = {
+  "busybox-demo": "busybox:latest",
   "pytorch-2.3-cuda12": "pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime",
   "pytorch-1.13-cuda11": "pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime",
   "tensorflow-2.16": "tensorflow/tensorflow:2.16.1-gpu",
@@ -66,6 +67,15 @@ function resolveDockerImage(image) {
   return IMAGE_TEMPLATES[image] || image;
 }
 
+function isLightweightDemoImage(image) {
+  return image === "busybox-demo" || image === "busybox" || image === "busybox:latest";
+}
+
+function dockerCommandForImage(image) {
+  if (isLightweightDemoImage(image)) return ["sleep", "3600"];
+  return ["sh", "-lc", "sleep infinity"];
+}
+
 function makeContainerName(requestId) {
   return `lab-rot-${requestId}`;
 }
@@ -103,11 +113,11 @@ function createDockerContainer({ request, port, name }) {
     "/workspace",
   ];
 
-  if (request.gpus > 0) {
+  if (request.gpus > 0 && !isLightweightDemoImage(request.image)) {
     args.push("--gpus", "all");
   }
 
-  args.push(image, "sh", "-lc", "sleep infinity");
+  args.push(image, ...dockerCommandForImage(request.image));
 
   try {
     return {
