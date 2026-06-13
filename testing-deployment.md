@@ -80,7 +80,7 @@ Invoke-RestMethod http://localhost:3133/api/state
 
 结果：接口返回 GPU 节点、申请、沙箱、轮转、评分和知识条目；在当前机器上识别到 `nvidia-smi` 来源的 NVIDIA GPU。
 
-如果运行环境未检测到 Docker CLI，则真实容器创建需要在安装 Docker 的机器上执行以下验收。本项目当前已在本机 Docker Desktop 环境完成 Docker 实机验收，证据见 `feedback-evidence/docker-validation-report.md`：
+如果运行环境未检测到 Docker CLI，则真实容器创建需要在安装 Docker 的机器上执行以下验收。本项目当前已在本机 Docker Desktop 环境完成 Docker 实机验收，证据见 `feedback-evidence/Docker实机验收报告.md`：
 
 ```powershell
 docker --version
@@ -172,11 +172,11 @@ docker ps -a
 
 已归档证据：
 
-- `feedback-evidence/docker-validation-report.md`
-- `feedback-evidence/Docker-01-manual-create-pause-unpause.png`
-- `feedback-evidence/Docker-02-manual-snapshot-release.png`
-- `feedback-evidence/Docker-03-project-docker-ps.png`
-- `feedback-evidence/Docker-04-project-sandbox-running.png`
+- `feedback-evidence/Docker实机验收报告.md`
+- `feedback-evidence/Docker验收-01-手动创建暂停恢复.png`
+- `feedback-evidence/Docker验收-02-手动快照释放.png`
+- `feedback-evidence/Docker验收-03-项目容器docker-ps.png`
+- `feedback-evidence/Docker验收-04-项目沙箱运行状态.png`
 
 ## 6. 服务器部署
 
@@ -243,7 +243,8 @@ docker ps -a
 - 页面提交申请后，刷新页面数据不丢失。
 - 如已安装 Docker，批准申请能创建真实容器；本机验收已通过。
 - `feedback-evidence/` 中至少有 3 位真实试用者证据。
-- 文档中没有“待补充”的最终提交内容；若确实未完成，应在答辩中说明原因和补救计划。
+- 用户联系方式若公开版打码或暂未补充，应在答辩中说明线下留存情况和隐私处理原因。
+- 文档中没有未说明原因的“待补充”最终提交内容；若确实未完成，应在答辩中说明原因和补救计划。
 
 ## 10. 后续工程化测试计划
 

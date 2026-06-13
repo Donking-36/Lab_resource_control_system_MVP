@@ -24,15 +24,15 @@
 
 | 步骤 | 命令或操作 | 结果 | 证据 |
 | --- | --- | --- | --- |
-| 拉取轻量镜像 | `docker pull busybox` | 成功拉取 `busybox:latest` | `Docker-01-manual-create-pause-unpause.png` |
-| 创建容器 | `docker run -d --name lab-test busybox sleep 3600` | 成功创建容器 `lab-test` | `Docker-01-manual-create-pause-unpause.png` |
-| 查看运行状态 | `docker ps` | 容器状态为 `Up` | `Docker-01-manual-create-pause-unpause.png` |
-| 暂停容器 | `docker pause lab-test` | 容器状态变为 `Paused` | `Docker-01-manual-create-pause-unpause.png` |
-| 恢复容器 | `docker unpause lab-test` | 容器恢复为 `Up` | `Docker-01-manual-create-pause-unpause.png` |
-| 创建快照 | `docker commit lab-test lab-snapshot:test-1` | 生成快照镜像 | `Docker-02-manual-snapshot-release.png` |
-| 查看镜像 | `docker images` | 出现 `lab-snapshot:test-1` | `Docker-02-manual-snapshot-release.png` |
-| 释放容器 | `docker rm -f lab-test` | 容器被删除 | `Docker-02-manual-snapshot-release.png` |
-| 验证释放 | `docker ps -a` | 不再显示 `lab-test` | `Docker-02-manual-snapshot-release.png` |
+| 拉取轻量镜像 | `docker pull busybox` | 成功拉取 `busybox:latest` | `Docker验收-01-手动创建暂停恢复.png` |
+| 创建容器 | `docker run -d --name lab-test busybox sleep 3600` | 成功创建容器 `lab-test` | `Docker验收-01-手动创建暂停恢复.png` |
+| 查看运行状态 | `docker ps` | 容器状态为 `Up` | `Docker验收-01-手动创建暂停恢复.png` |
+| 暂停容器 | `docker pause lab-test` | 容器状态变为 `Paused` | `Docker验收-01-手动创建暂停恢复.png` |
+| 恢复容器 | `docker unpause lab-test` | 容器恢复为 `Up` | `Docker验收-01-手动创建暂停恢复.png` |
+| 创建快照 | `docker commit lab-test lab-snapshot:test-1` | 生成快照镜像 | `Docker验收-02-手动快照释放.png` |
+| 查看镜像 | `docker images` | 出现 `lab-snapshot:test-1` | `Docker验收-02-手动快照释放.png` |
+| 释放容器 | `docker rm -f lab-test` | 容器被删除 | `Docker验收-02-手动快照释放.png` |
+| 验证释放 | `docker ps -a` | 不再显示 `lab-test` | `Docker验收-02-手动快照释放.png` |
 
 ## 4. 项目集成验证
 
@@ -49,26 +49,26 @@
 
 证据文件：
 
-- 页面沙箱截图：`Docker-04-project-sandbox-running.png`
-- 终端 `docker ps` 截图：`Docker-03-project-docker-ps.png`
+- 页面沙箱截图：`Docker验收-04-项目沙箱运行状态.png`
+- 终端 `docker ps` 截图：`Docker验收-03-项目容器docker-ps.png`
 
 ## 5. 证据截图预览
 
 ### 5.1 手动 Docker 创建、暂停、恢复
 
-![手动 Docker 创建、暂停、恢复](Docker-01-manual-create-pause-unpause.png)
+![手动 Docker 创建、暂停、恢复](Docker验收-01-手动创建暂停恢复.png)
 
 ### 5.2 手动 Docker 快照、释放
 
-![手动 Docker 快照、释放](Docker-02-manual-snapshot-release.png)
+![手动 Docker 快照、释放](Docker验收-02-手动快照释放.png)
 
 ### 5.3 项目创建容器后的 docker ps
 
-![项目创建容器后的 docker ps](Docker-03-project-docker-ps.png)
+![项目创建容器后的 docker ps](Docker验收-03-项目容器docker-ps.png)
 
 ### 5.4 项目沙箱运行状态
 
-![项目沙箱运行状态](Docker-04-project-sandbox-running.png)
+![项目沙箱运行状态](Docker验收-04-项目沙箱运行状态.png)
 
 ## 6. 与项目功能的对应关系
 

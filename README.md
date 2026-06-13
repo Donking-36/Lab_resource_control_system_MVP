@@ -19,12 +19,15 @@
 - [MVP 需求优先级清单](requirements-priority.md)
 - [用户验证与反馈报告](validation-feedback-report.md)
 - [测试与部署说明](testing-deployment.md)
+- [后续迭代计划](后续迭代计划.md)
+- [项目提交自查清单](项目提交自查清单.md)
 
 建议提交时一并附上以下证据：
 
 - `mvp-screenshot.png` 和 `mvp-mobile.png`：桌面端、移动端界面截图。
 - `feedback-evidence/`：真实用户访谈摘要、问卷或聊天截图、试用过程截图。
-- Docker 实机验收报告与截图：`feedback-evidence/docker-validation-report.md`、`Docker-01-*` 至 `Docker-04-*`。
+- 用户反馈证据：`feedback-evidence/用户反馈原始材料-访谈摘要.md`、`feedback-evidence/用户反馈-01-*` 至 `feedback-evidence/用户反馈-03-*`，以及 `feedback-evidence/用户反馈汇总与闭环处理.md`。
+- Docker 实机验收报告与截图：`feedback-evidence/Docker实机验收报告.md`、`Docker验收-01-*` 至 `Docker验收-04-*`。
 
 ## 运行方式
 
@@ -57,7 +60,7 @@ http://localhost:3000
 
 仍需在提交前补齐或现场演示：
 
-- 至少 3 位真实用户的原始反馈证据，覆盖导师、轮转学生、管理员三类角色。
+- 用户反馈访谈摘要已覆盖导师、轮转学生、管理员三类角色；联系方式仍需团队补充或公开版打码说明。
 - Docker 部分已完成实机截图归档；答辩时可现场复现页面批准分配和 `docker ps` 对照。
 - 如评审要求多人权限隔离，需要说明当前仅为 MVP 演示视角，未实现登录鉴权。
 
@@ -84,11 +87,11 @@ http://localhost:3000
 
 Docker 验收材料：
 
-- [Docker 实机验收报告](feedback-evidence/docker-validation-report.md)
-- [手动创建、暂停、恢复截图](feedback-evidence/Docker-01-manual-create-pause-unpause.png)
-- [手动快照、释放截图](feedback-evidence/Docker-02-manual-snapshot-release.png)
-- [项目创建容器的 docker ps 截图](feedback-evidence/Docker-03-project-docker-ps.png)
-- [项目沙箱运行截图](feedback-evidence/Docker-04-project-sandbox-running.png)
+- [Docker 实机验收报告](feedback-evidence/Docker实机验收报告.md)
+- [手动创建、暂停、恢复截图](feedback-evidence/Docker验收-01-手动创建暂停恢复.png)
+- [手动快照、释放截图](feedback-evidence/Docker验收-02-手动快照释放.png)
+- [项目创建容器的 docker ps 截图](feedback-evidence/Docker验收-03-项目容器docker-ps.png)
+- [项目沙箱运行截图](feedback-evidence/Docker验收-04-项目沙箱运行状态.png)
 
 Docker 实机验收建议流程：
 
@@ -100,6 +103,7 @@ Docker 实机验收建议流程：
 
 ## 后续接入点
 
+- 用户反馈驱动的分阶段计划见 [后续迭代计划](后续迭代计划.md)。
 - 日志与代码归档可对接 GitHub API，并把真实提交、报错和解决记录沉淀到知识条目。
 - 训练时长预测可替换为基于历史任务的回归模型。
 - 用户登录与权限可接入学校统一身份认证或实验室账号体系。
