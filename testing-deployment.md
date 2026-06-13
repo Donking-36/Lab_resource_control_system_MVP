@@ -11,9 +11,9 @@
 - `package.json`：启动脚本和 Node 版本要求。
 - `mvp-screenshot.png`、`mvp-mobile.png`：桌面端和移动端预览图。
 
-当前版本不需要安装第三方依赖。数据库使用 Node 24 内置 `node:sqlite`，启动时自动生成 `data/lab_resource.db`。GPU 状态优先调用本机或服务器的 `nvidia-smi`，失败时回退到数据库种子节点。
+当前版本不需要安装 npm 第三方依赖。数据库使用 Node 24 内置 `node:sqlite`，启动时自动生成 `data/lab_resource.db`。GPU 状态优先调用本机或服务器的 `nvidia-smi`，失败时回退到数据库种子节点。
 
-真实容器编排需要额外安装 Docker。GPU 容器需要 NVIDIA 驱动和 NVIDIA Container Toolkit。
+真实容器编排需要额外安装 Docker。GPU 容器需要 NVIDIA 驱动和 NVIDIA Container Toolkit；如果没有 GPU 容器运行条件，也可以先用 CPU 容器完成创建、暂停、恢复、快照、释放的流程验收。
 
 ## 2. 本地运行
 
@@ -34,6 +34,14 @@ http://localhost:3000
 ```powershell
 $env:PORT=3130; npm start
 ```
+
+健康检查：
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/health
+```
+
+返回结果中应包含 `database` 和 `docker` 字段。`docker.available` 为 `false` 时，说明 Docker 未安装或当前用户没有权限访问 Docker。
 
 ## 3. 手工验收用例
 
@@ -82,7 +90,87 @@ docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
 
 当前还完成了人工代码走查：确认 MVP 页面已显式标注工程边界，沙箱快照版本可见，信用调度说明已补充，用户输入在列表渲染前会进行 HTML 转义。
 
-## 5. 静态部署
+## 5. Docker 实机验收流程
+
+在本机或服务器完成 Docker 安装后，按以下流程截图归档。
+
+### 5.1 环境检查
+
+```powershell
+docker --version
+docker info
+```
+
+如果需要 GPU 容器，再执行：
+
+```powershell
+nvidia-smi
+docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
+```
+
+截图要求：Docker 版本、Docker info 成功输出、GPU 测试成功输出。
+
+### 5.2 项目启动
+
+```powershell
+npm start
+```
+
+打开：
+
+```text
+http://localhost:3000
+```
+
+截图要求：首页、GPU 大盘、`/api/health` 返回结果。
+
+### 5.3 创建容器
+
+1. 在页面提交一条算力申请。
+2. 点击批准或自动调度。
+3. 在沙箱表格查看容器 ID、容器名、主机端口、容器端口和 Docker 状态。
+4. 在终端执行：
+
+```powershell
+docker ps
+```
+
+验收标准：页面展示的容器 ID 或容器名能在 `docker ps` 中找到。
+
+### 5.4 暂停、恢复、快照、释放
+
+暂停后检查：
+
+```powershell
+docker ps
+```
+
+恢复后检查：
+
+```powershell
+docker ps
+```
+
+快照后检查：
+
+```powershell
+docker images
+```
+
+释放后检查：
+
+```powershell
+docker ps -a
+```
+
+验收标准：
+
+- 暂停后页面状态变为 paused，Docker 状态同步变化。
+- 恢复后页面状态回到 running。
+- 快照后页面快照版本加 1，`docker images` 中出现 `lab-snapshot:*`。
+- 释放后页面沙箱记录消失，`docker ps -a` 中对应容器不存在。
+
+## 6. 服务器部署
 
 本项目现在需要 Node 后端，不再适合只部署到纯静态托管服务。可部署到以下环境：
 
@@ -98,7 +186,7 @@ docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
 4. 访问 `http://服务器地址:3000`。
 5. 如需后台运行，可用系统服务、PM2 或学校服务器提供的进程管理工具托管 `node server.js`。
 
-## 6. API 说明
+## 7. API 说明
 
 - `GET /api/health`：后端健康检查。
 - `GET /api/state`：一次性返回页面所需全部数据。
@@ -113,7 +201,7 @@ docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
 - `POST /api/rotations/:id/remind`：记录进度提醒。
 - `POST /api/evaluations`：保存导师评分。
 
-## 7. MVP 演示边界
+## 8. MVP 演示边界
 
 以下能力在当前版本中已经是真实工程能力：
 
@@ -137,7 +225,19 @@ docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
 - GitHub 自动归档。
 - 自动化测试和 CI。
 
-## 8. 后续工程化测试计划
+## 9. 提交前检查清单
+
+提交前建议确认：
+
+- `npm run check` 通过。
+- `npm start` 后可打开 `http://localhost:3000`。
+- `/api/health` 返回数据库状态和 Docker 状态。
+- 页面提交申请后，刷新页面数据不丢失。
+- 如已安装 Docker，批准申请能创建真实容器。
+- `feedback-evidence/` 中至少有 3 位真实试用者证据。
+- 文档中没有“待补充”的最终提交内容；若确实未完成，应在答辩中说明原因和补救计划。
+
+## 10. 后续工程化测试计划
 
 接入后端后，建议补充：
 
