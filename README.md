@@ -24,7 +24,7 @@
 
 - `mvp-screenshot.png` 和 `mvp-mobile.png`：桌面端、移动端界面截图。
 - `feedback-evidence/`：真实用户访谈摘要、问卷或聊天截图、试用过程截图。
-- Docker 实机验收截图：`docker ps`、容器创建页面、暂停/恢复、`docker images` 快照、释放后的 `docker ps -a`。
+- Docker 实机验收报告与截图：`feedback-evidence/docker-validation-report.md`、`Docker-01-*` 至 `Docker-04-*`。
 
 ## 运行方式
 
@@ -51,14 +51,14 @@ http://localhost:3000
 - 前端 MVP 工作台：GPU 大盘、算力申请、信用队列、沙箱、轮转 WBS、导师评分、知识图谱。
 - 后端 API 与 SQLite：申请、审批、沙箱、进度、评分和知识条目均可持久化。
 - 真实 GPU 监控：有 NVIDIA 驱动时读取 `nvidia-smi`；无 GPU 或读取失败时使用数据库回退数据。
-- Docker 编排接口：批准、暂停、恢复、快照、释放均已调用 Docker CLI。
+- Docker 编排接口：批准、暂停、恢复、快照、释放均已调用 Docker CLI，并已完成本机实机验收。
 - 轻量 Docker 演示镜像：申请表可选择 `busybox-demo`，用于在普通 Docker 环境中验证容器创建、暂停、恢复、快照和释放。
 - 提交文档：需求优先级、验证反馈、测试部署和证据归档说明已补充。
 
 仍需在提交前补齐或现场演示：
 
 - 至少 3 位真实用户的原始反馈证据，覆盖导师、轮转学生、管理员三类角色。
-- 在一台已安装 Docker 的机器上完成容器创建、暂停/恢复、快照、释放的实机截图。
+- Docker 部分已完成实机截图归档；答辩时可现场复现页面批准分配和 `docker ps` 对照。
 - 如评审要求多人权限隔离，需要说明当前仅为 MVP 演示视角，未实现登录鉴权。
 
 ## 预览
@@ -73,14 +73,22 @@ http://localhost:3000
 
 ## Docker 编排说明
 
-当前后端已接入 Docker CLI：
+当前后端已接入 Docker CLI，并已在本机完成实机验收：
 
 - 批准申请时执行 `docker run -d` 创建容器。
 - 暂停/恢复时执行 `docker pause` / `docker unpause`。
 - 快照时执行 `docker commit` 生成 `lab-snapshot:*` 镜像。
 - 释放时执行 `docker rm -f` 删除容器。
 
-本机未安装 Docker 时，相关 API 会返回明确错误，不会伪造容器成功状态。
+本机未安装 Docker 时，相关 API 会返回明确错误，不会伪造容器成功状态。当前验收中，页面创建的 `lab-rot-3` 容器已在 `docker ps` 中验证存在，页面 Docker ID、镜像、端口和运行状态均与终端输出一致。
+
+Docker 验收材料：
+
+- [Docker 实机验收报告](feedback-evidence/docker-validation-report.md)
+- [手动创建、暂停、恢复截图](feedback-evidence/Docker-01-manual-create-pause-unpause.png)
+- [手动快照、释放截图](feedback-evidence/Docker-02-manual-snapshot-release.png)
+- [项目创建容器的 docker ps 截图](feedback-evidence/Docker-03-project-docker-ps.png)
+- [项目沙箱运行截图](feedback-evidence/Docker-04-project-sandbox-running.png)
 
 Docker 实机验收建议流程：
 

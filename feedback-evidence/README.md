@@ -1,6 +1,6 @@
 # 用户反馈证据归档说明
 
-本目录用于存放真实用户试用证据和 Docker 实机验收截图。请勿放入伪造材料；正式提交前至少补齐 3 类角色的原始证据，并补充一组容器创建、快照、释放截图。
+本目录用于存放真实用户试用证据和 Docker 实机验收截图。请勿放入伪造材料；正式提交前至少补齐 3 类角色的原始证据。Docker 实机证据已归档在本目录。
 
 ## 建议文件命名
 
@@ -8,11 +8,11 @@
 - `U1-导师-试用截图-01.png`
 - `U2-轮转生-聊天记录截图.png`
 - `U3-管理员-后台数据截图.png`
-- `Docker-01-health.png`
-- `Docker-02-create-container.png`
-- `Docker-03-docker-ps.png`
-- `Docker-04-snapshot-images.png`
-- `Docker-05-release-container.png`
+- `docker-validation-report.md`
+- `Docker-01-manual-create-pause-unpause.png`
+- `Docker-02-manual-snapshot-release.png`
+- `Docker-03-project-docker-ps.png`
+- `Docker-04-project-sandbox-running.png`
 
 ## 每位用户至少包含
 

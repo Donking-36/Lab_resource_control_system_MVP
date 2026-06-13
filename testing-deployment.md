@@ -80,7 +80,7 @@ Invoke-RestMethod http://localhost:3133/api/state
 
 结果：接口返回 GPU 节点、申请、沙箱、轮转、评分和知识条目；在当前机器上识别到 `nvidia-smi` 来源的 NVIDIA GPU。
 
-当前环境未检测到 Docker CLI，因此真实容器创建需要在安装 Docker 的服务器上执行以下验收：
+如果运行环境未检测到 Docker CLI，则真实容器创建需要在安装 Docker 的机器上执行以下验收。本项目当前已在本机 Docker Desktop 环境完成 Docker 实机验收，证据见 `feedback-evidence/docker-validation-report.md`：
 
 ```powershell
 docker --version
@@ -92,7 +92,7 @@ docker run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
 
 ## 5. Docker 实机验收流程
 
-在本机或服务器完成 Docker 安装后，按以下流程截图归档。
+本项目已按以下流程完成截图归档。若换到新机器部署，可按同一流程复验。
 
 ### 5.1 环境检查
 
@@ -135,7 +135,7 @@ http://localhost:3000
 docker ps
 ```
 
-验收标准：页面展示的容器 ID 或容器名能在 `docker ps` 中找到。`busybox-demo` 会创建 `busybox:latest` 容器并执行 `sleep 3600`，用于避开 PyTorch/CUDA 大镜像下载问题。
+验收标准：页面展示的容器 ID 或容器名能在 `docker ps` 中找到。当前实机验收中，页面创建的 `lab-rot-3` 容器与 `docker ps` 输出一致；`busybox-demo` 可作为轻量兜底镜像，用于避开 PyTorch/CUDA 大镜像下载问题。
 
 ### 5.4 暂停、恢复、快照、释放
 
@@ -169,6 +169,14 @@ docker ps -a
 - 恢复后页面状态回到 running。
 - 快照后页面快照版本加 1，`docker images` 中出现 `lab-snapshot:*`。
 - 释放后页面沙箱记录消失，`docker ps -a` 中对应容器不存在。
+
+已归档证据：
+
+- `feedback-evidence/docker-validation-report.md`
+- `feedback-evidence/Docker-01-manual-create-pause-unpause.png`
+- `feedback-evidence/Docker-02-manual-snapshot-release.png`
+- `feedback-evidence/Docker-03-project-docker-ps.png`
+- `feedback-evidence/Docker-04-project-sandbox-running.png`
 
 ## 6. 服务器部署
 
@@ -233,7 +241,7 @@ docker ps -a
 - `npm start` 后可打开 `http://localhost:3000`。
 - `/api/health` 返回数据库状态和 Docker 状态。
 - 页面提交申请后，刷新页面数据不丢失。
-- 如已安装 Docker，批准申请能创建真实容器。
+- 如已安装 Docker，批准申请能创建真实容器；本机验收已通过。
 - `feedback-evidence/` 中至少有 3 位真实试用者证据。
 - 文档中没有“待补充”的最终提交内容；若确实未完成，应在答辩中说明原因和补救计划。
 
