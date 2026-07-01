@@ -1,3 +1,4 @@
+/* Design tokens */
 :root {
   --bg: #f4f7f6;
   --surface: #ffffff;
@@ -19,6 +20,7 @@
     "Inter", "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
 }
 
+/* Base */
 * {
   box-sizing: border-box;
 }
@@ -46,12 +48,14 @@ button {
   cursor: pointer;
 }
 
+/* App layout */
 .app-shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
 }
 
+/* Sidebar */
 .sidebar {
   position: sticky;
   top: 0;
@@ -142,6 +146,7 @@ button {
   line-height: 1.55;
 }
 
+/* Main layout */
 .main {
   display: grid;
   gap: 22px;
@@ -150,6 +155,7 @@ button {
   padding: 28px;
 }
 
+/* Topbar and search */
 .topbar {
   display: flex;
   align-items: center;
@@ -225,6 +231,7 @@ h2 {
   background: transparent;
 }
 
+/* Buttons */
 .icon-button,
 .primary-button,
 .secondary-button,
@@ -274,6 +281,7 @@ h2 {
   border-color: rgba(181, 69, 56, 0.24);
 }
 
+/* Metrics and panels */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -332,6 +340,7 @@ h2 {
   margin-bottom: 18px;
 }
 
+/* Status chips */
 .status-pill,
 .chip {
   display: inline-flex;
@@ -358,6 +367,7 @@ h2 {
   background: var(--red-soft);
 }
 
+/* GPU cards */
 .gpu-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -441,6 +451,7 @@ h2 {
   font-weight: 700;
 }
 
+/* Forms and predictor */
 .predictor,
 .request-form,
 .evaluation-form {
@@ -507,6 +518,7 @@ input[type="range"] {
   font-size: 28px;
 }
 
+/* Request queue */
 .queue-list {
   display: grid;
   gap: 12px;
@@ -580,6 +592,7 @@ input[type="range"] {
   gap: 8px;
 }
 
+/* Sandbox table */
 .table-wrap {
   overflow-x: auto;
 }
@@ -612,6 +625,7 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
+/* Rotation progress */
 .rotation-list {
   display: grid;
   gap: 13px;
@@ -657,6 +671,7 @@ tbody tr:last-child td {
   background: var(--line);
 }
 
+/* Evaluations */
 .evaluation-summary,
 .knowledge-list {
   display: grid;
@@ -676,6 +691,7 @@ tbody tr:last-child td {
   font-size: 13px;
 }
 
+/* Knowledge graph */
 .knowledge-layout {
   align-items: stretch;
 }
@@ -723,6 +739,7 @@ tbody tr:last-child td {
   text-anchor: middle;
 }
 
+/* Toast */
 .toast {
   position: fixed;
   right: 24px;
@@ -748,6 +765,7 @@ tbody tr:last-child td {
   transform: translateY(0);
 }
 
+/* Responsive layout */
 @media (max-width: 1180px) {
   .app-shell {
     grid-template-columns: 1fr;

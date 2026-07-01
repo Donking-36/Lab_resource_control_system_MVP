@@ -19,6 +19,7 @@
 - [MVP 需求优先级清单](requirements-priority.md)
 - [用户验证与反馈报告](validation-feedback-report.md)
 - [测试与部署说明](testing-deployment.md)
+- [架构说明](ARCHITECTURE.md)
 - [后续迭代计划](后续迭代计划.md)
 - [项目提交自查清单](项目提交自查清单.md)
 
@@ -46,6 +47,14 @@ http://localhost:3000
 数据库会自动生成在 `data/lab_resource.db`。需要 Node.js 24 或更高版本，因为本项目使用内置 `node:sqlite`。
 
 如需启用真实容器编排，还需要服务器或本机安装 Docker，并确保 `docker` 命令可用。GPU 容器还需要 NVIDIA 驱动和 NVIDIA Container Toolkit。
+
+## 工程结构
+
+当前代码已按职责拆分，`server.js` 保留为后端启动入口，`app.js` 保留为前端组装入口：
+
+- `src/server/`：后端配置、HTTP 工具、数据库 schema/seed/repository、Docker 和 GPU 适配器、业务服务、API/静态路由。
+- `src/client/`：前端状态、DOM 引用、API 请求、渲染、事件处理和可测试的业务规则。
+- `tests/`：API 集成测试、语法检查脚本、配置解析测试、HTTP 工具测试、前端状态/DOM/API/规则/渲染聚合器/渲染分片/事件测试、Docker/GPU 适配器测试、数据库 schema/seed 测试、repository 契约测试、服务层编排测试、API/应用路由测试和静态路由边界测试。
 
 ## 当前完成状态
 

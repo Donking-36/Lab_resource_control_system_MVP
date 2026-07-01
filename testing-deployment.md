@@ -2,12 +2,15 @@
 
 ## 1. 系统形态
 
-当前 MVP 是前后端一体的轻量工程版，包含以下文件：
+当前 MVP 是前后端一体的轻量工程版，核心入口和模块如下：
 
 - `index.html`：页面结构和功能入口。
 - `styles.css`：响应式布局和视觉样式。
-- `app.js`：前端渲染、交互逻辑和后端 API 调用。
-- `server.js`：Node HTTP 后端、SQLite 数据库读写、静态文件托管和 `nvidia-smi` GPU 监控。
+- `app.js`：前端组装入口，负责连接状态、渲染、事件和 API 模块。
+- `src/client/`：前端状态、DOM 引用、API 请求、渲染、事件处理和可测试的业务规则。
+- `server.js`：Node 后端启动入口，负责组装依赖并启动 HTTP 服务。
+- `src/server/`：后端配置、数据库 schema/seed/repository、Docker 适配器、GPU 监控适配器、业务服务、API 路由和静态文件托管。
+- `tests/`：API 集成测试、语法检查脚本、配置解析测试、HTTP 工具测试、前端状态/DOM/API/规则/渲染聚合器/渲染分片/事件测试、Docker/GPU 适配器测试、数据库 schema/seed 测试、repository 契约测试、服务层编排测试、API/应用路由测试和静态路由边界测试。
 - `package.json`：启动脚本和 Node 版本要求。
 - `mvp-screenshot.png`、`mvp-mobile.png`：桌面端和移动端预览图。
 
@@ -63,14 +66,30 @@ Invoke-RestMethod http://localhost:3000/api/health
 
 ## 4. 已执行检查
 
-已执行 JavaScript 语法检查：
+JavaScript 语法检查命令：
 
 ```powershell
-node --check server.js
-node --check app.js
+npm run check
 ```
 
-结果：通过，无语法错误。
+模块化测试入口：
+
+```powershell
+npm run test:server
+npm run test:client
+npm test
+```
+
+历史记录：重构前曾通过语法检查，无语法错误。
+
+本次模块化重构后新增了 `src/server/`、`src/client/`、自动语法检查脚本、配置解析测试、HTTP 工具测试、前端状态/DOM/API/渲染聚合器/渲染分片/事件测试、Docker/GPU 适配器测试、数据库 schema/seed 测试、repository 测试、服务层测试、API/应用路由测试和静态路由边界测试，并已更新 `npm run check`、`npm run test:server`、`npm run test:client`、`npm test` 覆盖这些文件。当前 WSL 1 环境中没有可用 Linux `node`，且 Windows `node.exe` 无法从 WSL 1 启动，因此本机复验命令返回：
+
+```text
+WSL 1 is not supported. Please upgrade to WSL 2 or above.
+Could not determine Node.js install directory
+```
+
+这属于当前验证环境限制，不代表代码已通过运行验证。请在 Node.js 24+ 可用环境中执行 `npm run check`、`npm run test:server`、`npm run test:client` 和 `npm test` 复验。
 
 已执行后端接口检查：
 
@@ -214,6 +233,7 @@ docker ps -a
 以下能力在当前版本中已经是真实工程能力：
 
 - Node 后端 API。
+- 静态文件路由白名单，避免直接暴露后端源码、测试文件、隐藏目录和数据库目录。
 - SQLite 数据库持久化。
 - `nvidia-smi` GPU 状态读取。
 - 申请、审批、沙箱记录、WBS 进度、评分和知识条目的持久化读写。
@@ -231,7 +251,7 @@ docker ps -a
 - 登录和权限控制。
 - Kubernetes 集群编排。
 - GitHub 自动归档。
-- 自动化测试和 CI。
+- CI。
 
 ## 9. 提交前检查清单
 
@@ -250,8 +270,8 @@ docker ps -a
 
 接入后端后，建议补充：
 
-- 单元测试：覆盖优先级计算、训练时长预测、风险提醒规则。
-- API 测试：覆盖申请、审批、沙箱、评分、知识条目的增删改查。
+- 单元测试：已覆盖配置解析、HTTP 工具、前端状态、前端 DOM 映射、前端 API 封装、优先级计算、训练时长预测、风险提醒规则、前端渲染聚合器、前端渲染分片、申请队列排序/转义、前端事件命令层、调度节点选择、端口归还、Docker/GPU 适配器、数据库 schema/seed、repository 写入契约、服务层事务编排、API/应用路由分发和静态路由边界。
+- API 测试：已覆盖申请、审批、沙箱、评分、知识条目的主要流程；后续可继续扩展异常场景。
 - 端到端测试：覆盖学生申请、导师审批、管理员释放资源的完整流程。
 - 集成测试：在测试服务器验证 Docker/Kubernetes 创建、端口映射和数据集挂载。
 - 权限测试：验证学生、导师、管理员不能越权操作。
