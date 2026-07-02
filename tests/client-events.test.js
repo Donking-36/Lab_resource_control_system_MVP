@@ -19,7 +19,7 @@ function createHandlers(overrides = {}) {
         };
       },
     },
-    api: {
+    api: overrides.api || {
       async loadState({ updateState, renderAll }) {
         calls.push({ name: "loadState" });
         updateState({ loaded: true });
@@ -98,9 +98,9 @@ class FakeFormData {
 
       await handlers.autoSchedule();
 
-      assert.equal(calls[0].name, "mutate");
-      assert.equal(calls[0].path, "/api/schedule/next");
-      assert.deepEqual(calls[0].options, { method: "POST" });
+      const mutation = calls.find((call) => call.name === "mutate");
+      assert.equal(mutation.path, "/api/schedule/next");
+      assert.deepEqual(mutation.options, { method: "POST" });
       assert.equal(calls.at(-1).message, "公平调度器已执行，并记录可解释决策审计。");
     }
 
@@ -113,8 +113,9 @@ class FakeFormData {
     {
       const { calls, handlers } = createHandlers();
       await handlers.releaseSandbox("lab rot/7");
-      assert.equal(calls[0].path, "/api/sandboxes/lab%20rot%2F7");
-      assert.deepEqual(calls[0].options, { method: "DELETE" });
+      const mutation = calls.find((call) => call.name === "mutate");
+      assert.equal(mutation.path, "/api/sandboxes/lab%20rot%2F7");
+      assert.deepEqual(mutation.options, { method: "DELETE" });
       assert.equal(calls.at(-1).message, "沙箱资源已释放并更新数据库。");
     }
 
@@ -147,9 +148,10 @@ class FakeFormData {
 
       assert.equal(event.prevented, true);
       assert.equal(event.currentTarget.resetCalled, true);
-      assert.equal(calls[0].path, "/api/requests");
-      assert.equal(calls[0].options.method, "POST");
-      assert.deepEqual(JSON.parse(calls[0].options.body), {
+      const mutation = calls.find((call) => call.name === "mutate");
+      assert.equal(mutation.path, "/api/requests");
+      assert.equal(mutation.options.method, "POST");
+      assert.deepEqual(JSON.parse(mutation.options.body), {
         student: "林可",
         topic: "小模型微调",
         gpus: 2,
@@ -159,6 +161,12 @@ class FakeFormData {
         dataset: "/datasets/tiny",
       });
       assert.equal(calls.at(-1).message, "算力申请已保存到数据库。");
+    }
+
+    {
+      const { calls, handlers } = createHandlers({ state: { requests: [], pendingActions: { duplicate: true } } });
+      assert.equal(await handlers.runAction("duplicate", async () => calls.push({ name: "should-not-run" })), false);
+      assert.deepEqual(calls, []);
     }
 
     console.log("Client event tests passed");
