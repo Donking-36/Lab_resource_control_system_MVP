@@ -72,6 +72,45 @@ test("导师可推进轮转和评分但不能操作容器", async ({ page }) => 
   await expect(page.locator("#toast")).toContainText("导师评分已保存");
 });
 
+test("知识图谱节点和筛选标题保持清晰分离", async ({ page }) => {
+  await login(page, "admin");
+  await page.locator("#knowledge").scrollIntoViewIfNeeded();
+  await expect(page.locator("#knowledgeGraph .graph-node")).toHaveCount(13);
+
+  const layout = await page.locator("#knowledge").evaluate((section) => {
+    const boxes = Array.from(section.querySelectorAll(".graph-node")).map((node) => {
+      const box = node.getBoundingClientRect();
+      return { left: box.left, top: box.top, right: box.right, bottom: box.bottom };
+    });
+    const overlappingNodes = [];
+    for (let first = 0; first < boxes.length; first += 1) {
+      for (let second = first + 1; second < boxes.length; second += 1) {
+        const overlaps =
+          boxes[first].left < boxes[second].right &&
+          boxes[first].right > boxes[second].left &&
+          boxes[first].top < boxes[second].bottom &&
+          boxes[first].bottom > boxes[second].top;
+        if (overlaps) overlappingNodes.push([first, second]);
+      }
+    }
+
+    const heading = section.querySelector("h2").getBoundingClientRect();
+    const filter = section.querySelector("#knowledgeFilter").getBoundingClientRect();
+    const headerOverlap =
+      heading.left < filter.right &&
+      heading.right > filter.left &&
+      heading.top < filter.bottom &&
+      heading.bottom > filter.top;
+    return { overlappingNodes, headerOverlap };
+  });
+
+  expect(layout.overlappingNodes).toEqual([]);
+  expect(layout.headerOverlap).toBe(false);
+
+  await page.locator("#knowledgeFilter").selectOption("目标检测");
+  await expect(page.locator("#knowledgeGraph .graph-node")).toHaveCount(5);
+});
+
 test("破坏性操作要求确认，手机视口保持可用", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page, "admin");

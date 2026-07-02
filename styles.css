@@ -938,9 +938,19 @@ tbody tr:last-child td {
   align-items: stretch;
 }
 
-.knowledge-graph {
+.knowledge-panel-header > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.knowledge-filter {
+  flex: 0 1 240px;
+  width: min(240px, 100%);
+}
+
+.knowledge-graph-frame {
   width: 100%;
-  min-height: 360px;
+  overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -948,30 +958,51 @@ tbody tr:last-child td {
     #fff;
 }
 
+.knowledge-graph-frame:focus-visible {
+  outline: 3px solid rgba(39, 123, 90, 0.25);
+  outline-offset: 3px;
+}
+
+.knowledge-graph {
+  display: block;
+  width: 100%;
+  min-height: 360px;
+}
+
 .graph-link {
   stroke: rgba(109, 111, 104, 0.42);
   stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .graph-node {
-  fill: #fff;
+  fill: var(--surface);
   stroke-width: 2;
 }
 
 .graph-node.student {
+  fill: var(--green-soft);
   stroke: var(--green);
 }
 
 .graph-node.topic {
+  fill: var(--teal-soft);
   stroke: var(--teal);
 }
 
 .graph-node.issue {
+  fill: var(--amber-soft);
   stroke: var(--amber);
 }
 
 .graph-node.code {
+  fill: #eeeafa;
   stroke: var(--violet);
+}
+
+.graph-node.root {
+  fill: var(--green);
+  stroke: var(--green);
 }
 
 .graph-label {
@@ -979,6 +1010,28 @@ tbody tr:last-child td {
   font-size: 13px;
   font-weight: 700;
   text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.graph-node-group.root .graph-label {
+  fill: #fff;
+}
+
+.graph-column-label,
+.graph-empty-label {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  text-anchor: middle;
+}
+
+.graph-empty-label {
+  font-size: 14px;
 }
 
 /* Toast */
@@ -1054,6 +1107,11 @@ tbody tr:last-child td {
     width: 100%;
   }
 
+  .knowledge-filter {
+    flex-basis: auto;
+    width: 100%;
+  }
+
   h1 {
     font-size: 30px;
     line-height: 1.14;
@@ -1094,6 +1152,11 @@ tbody tr:last-child td {
   .algorithm-table-wrap {
     margin-inline: -18px;
     padding-inline: 18px;
+  }
+
+  .knowledge-graph {
+    width: 640px;
+    min-height: 348px;
   }
 }
 

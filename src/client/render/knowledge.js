@@ -32,19 +32,30 @@
     }
 
     function renderKnowledgeGraph(records) {
-      const center = { x: 360, y: 170, label: "实验室资产", type: "topic" };
-      const nodes = [center];
+      const graphWidth = 720;
+      const rootNode = { x: 360, y: 32, width: 126, height: 42, label: "实验室资产", type: "root" };
+      const nodes = [rootNode];
       const links = [];
+      const rowStart = 122;
+      const rowGap = 104;
+
+      function compactLabel(label, maxLength) {
+        const value = String(label);
+        return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+      }
 
       records.forEach((item, index) => {
-        const baseY = 76 + index * 96;
-        const topic = { x: 178, y: baseY, label: item.topic, type: "topic" };
-        const owner = { x: 360, y: baseY + 34, label: item.owner, type: "student" };
-        const issue = { x: 548, y: baseY, label: "报错经验", type: "issue" };
-        const code = { x: 548, y: baseY + 64, label: "代码分支", type: "code" };
+        const baseY = rowStart + index * rowGap;
+        const topic = { x: 128, y: baseY, width: 176, height: 44, label: item.topic, type: "topic" };
+        const owner = { x: 360, y: baseY, width: 104, height: 44, label: item.owner, type: "student" };
+        const issue = { x: 588, y: baseY - 22, width: 116, height: 34, label: "报错经验", type: "issue" };
+        const code = { x: 588, y: baseY + 22, width: 116, height: 34, label: "代码分支", type: "code" };
         nodes.push(topic, owner, issue, code);
-        links.push([center, topic], [topic, owner], [owner, issue], [owner, code]);
+        links.push([rootNode, owner], [topic, owner], [owner, issue], [owner, code]);
       });
+
+      const graphHeight = Math.max(218, rowStart + Math.max(records.length - 1, 0) * rowGap + 66);
+      els.knowledgeGraph.setAttribute("viewBox", `0 0 ${graphWidth} ${graphHeight}`);
 
       const linkMarkup = links
         .map(
@@ -52,18 +63,26 @@
             `<line class="graph-link" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" />`,
         )
         .join("");
+      const headingMarkup = records.length
+        ? `
+            <text class="graph-column-label" x="128" y="82">研究方向</text>
+            <text class="graph-column-label" x="360" y="82">接续人</text>
+            <text class="graph-column-label" x="588" y="82">知识沉淀</text>
+          `
+        : `<text class="graph-empty-label" x="360" y="126">暂无该方向的知识资产</text>`;
       const nodeMarkup = nodes
         .map(
           (node) => `
-            <g>
-              <circle class="graph-node ${node.type}" cx="${node.x}" cy="${node.y}" r="34"></circle>
-              <text class="graph-label" x="${node.x}" y="${node.y + 5}">${escapeHtml(node.label)}</text>
+            <g class="graph-node-group ${node.type}">
+              <title>${escapeHtml(node.label)}</title>
+              <rect class="graph-node ${node.type}" x="${node.x - node.width / 2}" y="${node.y - node.height / 2}" width="${node.width}" height="${node.height}" rx="${node.height / 2}"></rect>
+              <text class="graph-label" x="${node.x}" y="${node.y}">${escapeHtml(compactLabel(node.label, node.type === "topic" ? 9 : 7))}</text>
             </g>
           `,
         )
         .join("");
 
-      els.knowledgeGraph.innerHTML = `${linkMarkup}${nodeMarkup}`;
+      els.knowledgeGraph.innerHTML = `${linkMarkup}${headingMarkup}${nodeMarkup}`;
     }
 
     return {
