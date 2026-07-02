@@ -8,8 +8,19 @@
 })(typeof globalThis !== "undefined" ? globalThis : self, function createDomApi(defaultDocument) {
   function createDom(documentRef = defaultDocument) {
     const els = {
-      roleSelect: documentRef?.querySelector("#roleSelect"),
+      authLoading: documentRef?.querySelector("#authLoading"),
+      loginView: documentRef?.querySelector("#loginView"),
+      loginForm: documentRef?.querySelector("#loginForm"),
+      loginError: documentRef?.querySelector("#loginError"),
+      appShell: documentRef?.querySelector("#appShell"),
+      currentUserName: documentRef?.querySelector("#currentUserName"),
+      currentUserRole: documentRef?.querySelector("#currentUserRole"),
+      logoutBtn: documentRef?.querySelector("#logoutBtn"),
       roleHint: documentRef?.querySelector("#roleHint"),
+      globalError: documentRef?.querySelector("#globalError"),
+      globalErrorMessage: documentRef?.querySelector("#globalErrorMessage"),
+      globalErrorMeta: documentRef?.querySelector("#globalErrorMeta"),
+      retryBtn: documentRef?.querySelector("#retryBtn"),
       metricGpuUsage: documentRef?.querySelector("#metricGpuUsage"),
       metricContainers: documentRef?.querySelector("#metricContainers"),
       metricRisks: documentRef?.querySelector("#metricRisks"),
@@ -26,6 +37,11 @@
       knowledgeList: documentRef?.querySelector("#knowledgeList"),
       scheduleBoard: documentRef?.querySelector("#scheduleBoard"),
       auditList: documentRef?.querySelector("#auditList"),
+      algorithmReportMeta: documentRef?.querySelector("#algorithmReportMeta"),
+      algorithmReportTable: documentRef?.querySelector("#algorithmReportTable"),
+      confirmDialog: documentRef?.querySelector("#confirmDialog"),
+      confirmMessage: documentRef?.querySelector("#confirmMessage"),
+      confirmAccept: documentRef?.querySelector("#confirmAccept"),
       toast: documentRef?.querySelector("#toast"),
     };
 

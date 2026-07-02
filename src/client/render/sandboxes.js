@@ -2,7 +2,7 @@
   root.LabRenderParts = root.LabRenderParts || {};
   root.LabRenderParts.sandboxes = factory();
 })(typeof globalThis !== "undefined" ? globalThis : self, function createSandboxPart() {
-  function createSandboxRenderer({ state, els, rules }) {
+  function createSandboxRenderer({ state, els, rules, permissions }) {
     const { escapeHtml } = rules;
 
     function getNode(nodeId) {
@@ -36,13 +36,15 @@
               <td>${escapeHtml(box.containerStatus || "未知")}</td>
               <td>${escapeHtml(box.lastError || "-")}</td>
               <td>
+                ${permissions.can(state.user, "sandbox:manage") ? `
                 <div class="sandbox-actions">
-                  <button class="small-button" type="button" data-action="snapshot" data-id="${escapeHtml(box.id)}">快照</button>
-                  <button class="small-button" type="button" data-action="toggle" data-id="${escapeHtml(box.id)}">
+                  <button class="small-button" type="button" data-action="snapshot" data-id="${escapeHtml(box.id)}" data-pending-key="snapshot-${escapeHtml(box.id)}">快照</button>
+                  <button class="small-button" type="button" data-action="toggle" data-id="${escapeHtml(box.id)}" data-pending-key="toggle-${escapeHtml(box.id)}">
                     ${box.status === "running" ? "暂停" : "恢复"}
                   </button>
-                  <button class="small-button danger" type="button" data-action="release" data-id="${escapeHtml(box.id)}">释放</button>
+                  <button class="small-button danger" type="button" data-action="release" data-id="${escapeHtml(box.id)}" data-pending-key="release-${escapeHtml(box.id)}">释放</button>
                 </div>
+                ` : `<span class="permission-note">只读</span>`}
               </td>
             </tr>
           `;

@@ -25,14 +25,17 @@ try {
   {
     const renderApi = loadRenderer({});
     assert.throws(
-      () => renderApi.createRenderer({ state: {}, els: {}, documentRef: {}, rules: {} }),
-      /缺少前端渲染模块：metrics, gpu, requests, sandboxes, rotations, evaluations, knowledge, intelligence, controls/,
+      () => renderApi.createRenderer({ state: {}, els: {}, documentRef: {}, rules: {}, permissions: {} }),
+      /缺少前端渲染模块：auth, metrics, gpu, requests, sandboxes, rotations, evaluations, knowledge, intelligence, algorithmReport, controls/,
     );
   }
 
   {
     const calls = [];
     const renderApi = loadRenderer({
+      auth: {
+        createAuthRenderer: createPartFactory(["renderAuth", "renderGlobalError", "renderPending"], calls),
+      },
       metrics: {
         createMetricsRenderer: createPartFactory(["renderRoleHint", "renderMetrics"], calls),
       },
@@ -57,15 +60,20 @@ try {
       intelligence: {
         createIntelligenceRenderer: createPartFactory(["renderIntelligence"], calls),
       },
+      algorithmReport: {
+        createAlgorithmReportRenderer: createPartFactory(["renderAlgorithmReport"], calls),
+      },
       controls: {
         createControlRenderer: createPartFactory(["estimateHours", "applySearch"], calls),
       },
     });
 
-    const renderer = renderApi.createRenderer({ state: {}, els: {}, documentRef: {}, rules: {} });
+    const renderer = renderApi.createRenderer({ state: {}, els: {}, documentRef: {}, rules: {}, permissions: {} });
     renderer.renderAll();
 
     assert.deepEqual(calls, [
+      "renderAuth",
+      "renderGlobalError",
       "renderRoleHint",
       "renderMetrics",
       "renderGpuGrid",
@@ -75,8 +83,10 @@ try {
       "renderEvaluations",
       "renderKnowledge",
       "renderIntelligence",
+      "renderAlgorithmReport",
       "estimateHours",
       "applySearch",
+      "renderPending",
     ]);
   }
 

@@ -32,6 +32,7 @@ try {
     };
     const renderer = part.createMetricsRenderer({
       state: {
+        user: { role: "student" },
         gpuNodes: [
           { totalGpu: 4, usedGpu: 2 },
           { totalGpu: 4, usedGpu: 4 },
@@ -122,6 +123,7 @@ try {
       },
       els,
       rules: { escapeHtml, priorityScore },
+      permissions: { can: () => true },
     });
 
     renderer.renderRequests();
@@ -144,6 +146,7 @@ try {
       state: { requests: [{ status: "approved" }] },
       els,
       rules: { escapeHtml, priorityScore },
+      permissions: { can: () => false },
     });
 
     renderer.renderRequests();

@@ -6,7 +6,8 @@
     const { isRotationRisk, pct } = rules;
 
     function renderRoleHint(roleHints) {
-      els.roleHint.textContent = roleHints[els.roleSelect.value] ?? roleHints.mentor;
+      const role = state.user?.role || "student";
+      els.roleHint.textContent = roleHints[role] ?? roleHints.student;
     }
 
     function renderMetrics() {

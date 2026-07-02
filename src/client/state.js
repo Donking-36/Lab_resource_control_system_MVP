@@ -15,7 +15,12 @@
     knowledge: [],
     auditEvents: [],
     scheduling: { algorithm: "loading", fairnessIndex: 1, decisions: [] },
+    algorithmReport: null,
     gpuMonitor: { source: "loading" },
+    authStatus: "checking",
+    user: null,
+    globalError: null,
+    pendingActions: {},
   };
 
   function updateState(data) {

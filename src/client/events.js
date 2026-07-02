@@ -6,15 +6,56 @@
     root.LabEvents = eventsApi;
   }
 })(typeof globalThis !== "undefined" ? globalThis : self, function createEvents() {
-  function createEventHandlers({ state, els, documentRef, api, updateState, renderer, showToast, rules }) {
+  function createEventHandlers({
+    state,
+    els,
+    documentRef,
+    api,
+    updateState,
+    renderer,
+    showToast,
+    rules,
+    confirmAction = async () => true,
+    onApiError = () => {},
+  }) {
     const { priorityScore } = rules;
 
     async function loadState() {
       await api.loadState({ updateState, renderAll: renderer.renderAll });
     }
 
+    async function loadAlgorithmReport() {
+      await api.loadAlgorithmReport({ updateState, renderAll: renderer.renderAll });
+    }
+
     async function mutate(path, options = {}) {
+      updateState({ globalError: null });
       return api.mutate(path, options, { updateState, renderAll: renderer.renderAll });
+    }
+
+    function errorDetails(error) {
+      return { message: error.message, code: error.code || "CLIENT_ERROR", requestId: error.requestId || "" };
+    }
+
+    async function runAction(key, action) {
+      if (state.pendingActions?.[key]) return false;
+      updateState({ pendingActions: { ...(state.pendingActions || {}), [key]: true }, globalError: null });
+      renderer.renderChrome?.();
+      try {
+        await action();
+        return true;
+      } catch (error) {
+        updateState({ globalError: errorDetails(error) });
+        renderer.renderChrome?.();
+        onApiError(error);
+        showToast(error.message);
+        return false;
+      } finally {
+        const pendingActions = { ...(state.pendingActions || {}) };
+        delete pendingActions[key];
+        updateState({ pendingActions });
+        renderer.renderChrome?.();
+      }
     }
 
     async function approveRequest(requestId) {
@@ -89,7 +130,8 @@
 
     async function submitRequest(event) {
       event.preventDefault();
-      const formData = new FormData(event.currentTarget);
+      const formElement = event.currentTarget;
+      const formData = new FormData(formElement);
       const student = formData.get("student").trim();
       const topic = formData.get("topic").trim();
       const dataset = formData.get("dataset").trim();
@@ -112,7 +154,7 @@
         }),
       });
       showToast("算力申请已保存到数据库。");
-      event.currentTarget.reset();
+      formElement.reset();
     }
 
     async function refreshResources() {
@@ -123,18 +165,17 @@
 
     function bindEvents() {
       documentRef.querySelector("#requestForm").addEventListener("submit", (event) => {
-        submitRequest(event).catch((error) => showToast(error.message));
+        runAction("request-submit", () => submitRequest(event));
       });
       documentRef.querySelector("#evaluationForm").addEventListener("submit", (event) => {
-        saveEvaluation(event).catch((error) => showToast(error.message));
+        runAction("evaluation-save", () => saveEvaluation(event));
       });
       documentRef.querySelector("#autoScheduleBtn").addEventListener("click", () => {
-        autoSchedule().catch((error) => showToast(error.message));
+        runAction("auto-schedule", autoSchedule);
       });
       documentRef.querySelector("#refreshBtn").addEventListener("click", () => {
-        refreshResources().catch((error) => showToast(error.message));
+        runAction("refresh", refreshResources);
       });
-      els.roleSelect.addEventListener("change", renderer.renderRoleHint);
       documentRef.querySelector("#knowledgeFilter").addEventListener("change", renderer.renderKnowledge);
       documentRef.querySelector("#globalSearch").addEventListener("input", renderer.applySearch);
       ["#modelType", "#datasetSize", "#epochCount"].forEach((selector) => {
@@ -145,24 +186,33 @@
         const button = event.target.closest("button[data-action]");
         if (!button) return;
         const id = Number(button.dataset.id);
-        if (button.dataset.action === "approve") approveRequest(id).catch((error) => showToast(error.message));
-        if (button.dataset.action === "reject") rejectRequest(id).catch((error) => showToast(error.message));
+        if (button.dataset.action === "approve") runAction(`approve-${id}`, () => approveRequest(id));
+        if (button.dataset.action === "reject") {
+          confirmAction("驳回后该申请将退出待调度队列，确认继续吗？").then((confirmed) => {
+            if (confirmed) runAction(`reject-${id}`, () => rejectRequest(id));
+          });
+        }
       });
 
       els.sandboxTable.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-action]");
         if (!button) return;
-        if (button.dataset.action === "snapshot") snapshotSandbox(button.dataset.id).catch((error) => showToast(error.message));
-        if (button.dataset.action === "toggle") toggleSandbox(button.dataset.id).catch((error) => showToast(error.message));
-        if (button.dataset.action === "release") releaseSandbox(button.dataset.id).catch((error) => showToast(error.message));
+        const id = button.dataset.id;
+        if (button.dataset.action === "snapshot") runAction(`snapshot-${id}`, () => snapshotSandbox(id));
+        if (button.dataset.action === "toggle") runAction(`toggle-${id}`, () => toggleSandbox(id));
+        if (button.dataset.action === "release") {
+          confirmAction("释放会删除容器并归还 GPU 与端口，此操作不可撤销。确认继续吗？").then((confirmed) => {
+            if (confirmed) runAction(`release-${id}`, () => releaseSandbox(id));
+          });
+        }
       });
 
       els.rotationList.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-action]");
         if (!button) return;
         const id = Number(button.dataset.id);
-        if (button.dataset.action === "progress") progressRotation(id).catch((error) => showToast(error.message));
-        if (button.dataset.action === "remind") remindRotation(id).catch((error) => showToast(error.message));
+        if (button.dataset.action === "progress") runAction(`progress-${id}`, () => progressRotation(id));
+        if (button.dataset.action === "remind") runAction(`remind-${id}`, () => remindRotation(id));
       });
     }
 
@@ -170,6 +220,7 @@
       approveRequest,
       autoSchedule,
       bindEvents,
+      loadAlgorithmReport,
       loadState,
       refreshResources,
       rejectRequest,
@@ -180,6 +231,7 @@
       snapshotSandbox,
       submitRequest,
       toggleSandbox,
+      runAction,
     };
   }
 

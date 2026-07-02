@@ -3,11 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>实验室资源与轮转进度管理系统 MVP</title>
+    <title>实验室资源与轮转进度治理平台</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div id="authLoading" class="auth-loading" role="status" aria-live="polite">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <p>正在检查登录状态…</p>
+    </div>
+
+    <main id="loginView" class="login-view" hidden>
+      <section class="login-card" aria-labelledby="loginTitle">
+        <div class="brand login-brand"><span class="brand-mark">LR</span><strong>Lab Rotation</strong></div>
+        <p class="eyebrow">AI 科研实验室</p>
+        <h1 id="loginTitle">登录资源治理平台</h1>
+        <p class="login-intro">使用实验室账号进入。系统会依据学生、导师和管理员角色提供不同的工作台与操作权限。</p>
+        <form id="loginForm" class="login-form">
+          <label>用户名<input name="username" autocomplete="username" required autofocus /></label>
+          <label>密码<input name="password" type="password" autocomplete="current-password" required /></label>
+          <p id="loginError" class="form-error" role="alert" hidden></p>
+          <button class="primary-button" type="submit">安全登录</button>
+        </form>
+        <details class="demo-accounts">
+          <summary>答辩测试账号</summary>
+          <p>管理员 admin · 导师 mentor · 学生 lin</p>
+        </details>
+      </section>
+    </main>
+
+    <div id="appShell" class="app-shell" hidden>
       <aside class="sidebar">
         <div class="brand">
           <span class="brand-mark">LR</span>
@@ -20,6 +44,7 @@
         <nav class="nav-list" aria-label="主导航">
           <a href="#overview" class="active">总览</a>
           <a href="#intelligence">智能决策</a>
+          <a href="#algorithm-evidence">算法证据</a>
           <a href="#resources">GPU 大盘</a>
           <a href="#requests">算力申请</a>
           <a href="#sandboxes">沙箱编排</a>
@@ -28,13 +53,11 @@
         </nav>
 
         <section class="sidebar-panel">
-          <span>当前角色</span>
-          <select id="roleSelect" aria-label="当前角色">
-            <option value="mentor">导师</option>
-            <option value="student">轮转生</option>
-            <option value="admin">管理员</option>
-          </select>
+          <span>当前账号</span>
+          <strong id="currentUserName">未登录</strong>
+          <span id="currentUserRole" class="chip">访客</span>
           <p id="roleHint" class="sidebar-hint"></p>
+          <button id="logoutBtn" class="secondary-button full-button" type="button">退出登录</button>
         </section>
       </aside>
 
@@ -50,11 +73,16 @@
               <span>搜索</span>
               <input id="globalSearch" type="search" placeholder="学生、课题、方向" />
             </label>
-            <button id="refreshBtn" class="icon-button" type="button" title="刷新模拟数据" aria-label="刷新模拟数据">
+            <button id="refreshBtn" class="icon-button" type="button" title="刷新资源数据" aria-label="刷新资源数据" data-pending-key="refresh">
               ↻
             </button>
           </div>
         </header>
+
+        <section id="globalError" class="error-banner" role="alert" hidden>
+          <div><strong id="globalErrorMessage">请求失败</strong><small id="globalErrorMeta"></small></div>
+          <button id="retryBtn" class="small-button" type="button">重试</button>
+        </section>
 
         <section id="overview" class="metrics-grid" aria-label="关键指标">
           <article class="metric-card">
@@ -96,7 +124,7 @@
             </div>
             <div id="scheduleBoard" class="decision-board"></div>
           </div>
-          <div class="panel">
+          <div class="panel" data-capability="audit:view">
             <div class="panel-header">
               <div>
                 <p class="eyebrow">TRACE</p>
@@ -105,6 +133,25 @@
               </div>
             </div>
             <div id="auditList" class="audit-list"></div>
+          </div>
+        </section>
+
+        <section id="algorithm-evidence" class="section-band">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">REPRODUCIBLE EVIDENCE</p>
+                <h2>调度算法对照实验</h2>
+                <p class="panel-note">同一批固定种子任务对比 FIFO、短作业优先与 XFS-V1。Jain 指数越接近 1 越公平；饥饿率越低越好。</p>
+              </div>
+              <span id="algorithmReportMeta" class="status-pill">算法证据加载中…</span>
+            </div>
+            <div class="table-wrap algorithm-table-wrap">
+              <table class="algorithm-table">
+                <thead><tr><th>策略</th><th>平均等待</th><th>P95 等待</th><th>Jain 公平</th><th>GPU 利用率</th><th>吞吐量</th><th>饥饿率</th></tr></thead>
+                <tbody id="algorithmReportTable"><tr><td colspan="7">暂无算法报告</td></tr></tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -155,7 +202,7 @@
         </section>
 
         <section id="requests" class="section-band two-column">
-          <div class="panel">
+          <div class="panel" data-capability="request:create">
             <div class="panel-header">
               <div>
                 <p class="eyebrow">申请</p>
@@ -201,7 +248,7 @@
                 数据集挂载
                 <input name="dataset" value="/datasets/medical-seg" />
               </label>
-              <button class="primary-button" type="submit">提交申请</button>
+              <button class="primary-button" type="submit" data-pending-key="request-submit">提交申请</button>
             </form>
           </div>
 
@@ -212,7 +259,7 @@
                 <h2>信用调度</h2>
                 <p class="panel-note">由后端 XFS-V1 公平调度器排序；每个分量与推荐节点均可解释、可审计。</p>
               </div>
-              <button id="autoScheduleBtn" class="secondary-button" type="button">自动调度</button>
+              <button id="autoScheduleBtn" class="secondary-button" type="button" data-capability="schedule:run" data-pending-key="auto-schedule">自动调度</button>
             </div>
             <div id="requestQueue" class="queue-list"></div>
           </div>
@@ -261,7 +308,7 @@
             <div id="rotationList" class="rotation-list"></div>
           </div>
 
-          <div class="panel compact-panel">
+          <div class="panel compact-panel" data-capability="evaluation:save">
             <div class="panel-header">
               <div>
                 <p class="eyebrow">评价</p>
@@ -285,7 +332,7 @@
                 按期完成
                 <input name="delivery" type="range" min="0" max="100" value="88" />
               </label>
-              <button class="primary-button" type="submit">保存评分</button>
+              <button class="primary-button" type="submit" data-pending-key="evaluation-save">保存评分</button>
             </form>
             <div id="evaluationSummary" class="evaluation-summary"></div>
           </div>
@@ -321,11 +368,25 @@
       </main>
     </div>
 
+    <dialog id="confirmDialog" class="confirm-dialog" aria-labelledby="confirmTitle">
+      <form method="dialog">
+        <p class="eyebrow">请确认操作</p>
+        <h2 id="confirmTitle">此操作会修改系统状态</h2>
+        <p id="confirmMessage"></p>
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel">取消</button>
+          <button id="confirmAccept" class="small-button danger" value="confirm">确认执行</button>
+        </div>
+      </form>
+    </dialog>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="src/client/rules.js"></script>
+    <script src="src/client/permissions.js"></script>
     <script src="src/client/state.js"></script>
     <script src="src/client/dom.js"></script>
     <script src="src/client/api.js"></script>
+    <script src="src/client/auth.js"></script>
+    <script src="src/client/render/auth.js"></script>
     <script src="src/client/render/metrics.js"></script>
     <script src="src/client/render/gpu.js"></script>
     <script src="src/client/render/requests.js"></script>
@@ -334,6 +395,7 @@
     <script src="src/client/render/evaluations.js"></script>
     <script src="src/client/render/knowledge.js"></script>
     <script src="src/client/render/intelligence.js"></script>
+    <script src="src/client/render/algorithmReport.js"></script>
     <script src="src/client/render/controls.js"></script>
     <script src="src/client/render.js"></script>
     <script src="src/client/events.js"></script>

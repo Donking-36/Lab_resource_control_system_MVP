@@ -3,8 +3,19 @@ const assert = require("node:assert/strict");
 const { createDom, els: defaultEls } = require("../src/client/dom");
 
 const expectedSelectors = {
-  roleSelect: "#roleSelect",
+  authLoading: "#authLoading",
+  loginView: "#loginView",
+  loginForm: "#loginForm",
+  loginError: "#loginError",
+  appShell: "#appShell",
+  currentUserName: "#currentUserName",
+  currentUserRole: "#currentUserRole",
+  logoutBtn: "#logoutBtn",
   roleHint: "#roleHint",
+  globalError: "#globalError",
+  globalErrorMessage: "#globalErrorMessage",
+  globalErrorMeta: "#globalErrorMeta",
+  retryBtn: "#retryBtn",
   metricGpuUsage: "#metricGpuUsage",
   metricContainers: "#metricContainers",
   metricRisks: "#metricRisks",
@@ -21,6 +32,11 @@ const expectedSelectors = {
   knowledgeList: "#knowledgeList",
   scheduleBoard: "#scheduleBoard",
   auditList: "#auditList",
+  algorithmReportMeta: "#algorithmReportMeta",
+  algorithmReportTable: "#algorithmReportTable",
+  confirmDialog: "#confirmDialog",
+  confirmMessage: "#confirmMessage",
+  confirmAccept: "#confirmAccept",
   toast: "#toast",
 };
 
