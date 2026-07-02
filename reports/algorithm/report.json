@@ -1,0 +1,123 @@
+{
+  "algorithmVersion": "xfs-v1",
+  "weights": {
+    "request": {
+      "urgency": 35,
+      "credit": 20,
+      "aging": 15,
+      "efficiency": 15,
+      "fairness": 15
+    },
+    "node": {
+      "capacity": 45,
+      "memory": 30,
+      "bestFit": 15,
+      "sourceTrust": 10
+    }
+  },
+  "seed": 20240607,
+  "trials": 30,
+  "requestsPerTrial": 36,
+  "totalGpu": 8,
+  "starvationThresholdHours": 12,
+  "metrics": {
+    "avgWaitHours": "从到达到分配的平均等待（小时）",
+    "p95WaitHours": "最慢 5% 申请的等待（小时）",
+    "jainIndex": "学生 GPU-小时占用的 Jain 公平指数（越接近 1 越公平）",
+    "gpuUtilization": "已用 GPU-小时 / (总 GPU × makespan)",
+    "throughputPerHour": "单位时间完成分配的申请数",
+    "starvationRate": "等待超过 12 小时的申请占比"
+  },
+  "results": {
+    "fifo": {
+      "avgWaitHours": {
+        "mean": 11.605,
+        "std": 3.062
+      },
+      "p95WaitHours": {
+        "mean": 24.2,
+        "std": 5.558
+      },
+      "jainIndex": {
+        "mean": 0.41,
+        "std": 0.031
+      },
+      "gpuUtilization": {
+        "mean": 0.839,
+        "std": 0.027
+      },
+      "throughputPerHour": {
+        "mean": 0.759,
+        "std": 0.078
+      },
+      "starvationRate": {
+        "mean": 0.429,
+        "std": 0.167
+      },
+      "makespanHours": {
+        "mean": 47.933,
+        "std": 5
+      }
+    },
+    "sjf": {
+      "avgWaitHours": {
+        "mean": 6.405,
+        "std": 1.99
+      },
+      "p95WaitHours": {
+        "mean": 28.267,
+        "std": 6.572
+      },
+      "jainIndex": {
+        "mean": 0.419,
+        "std": 0.04
+      },
+      "gpuUtilization": {
+        "mean": 0.821,
+        "std": 0.032
+      },
+      "throughputPerHour": {
+        "mean": 0.744,
+        "std": 0.085
+      },
+      "starvationRate": {
+        "mean": 0.215,
+        "std": 0.073
+      },
+      "makespanHours": {
+        "mean": 49.033,
+        "std": 5.724
+      }
+    },
+    "xfs-v1": {
+      "avgWaitHours": {
+        "mean": 8.857,
+        "std": 2.436
+      },
+      "p95WaitHours": {
+        "mean": 28.9,
+        "std": 5.946
+      },
+      "jainIndex": {
+        "mean": 0.46,
+        "std": 0.04
+      },
+      "gpuUtilization": {
+        "mean": 0.905,
+        "std": 0.035
+      },
+      "throughputPerHour": {
+        "mean": 0.819,
+        "std": 0.088
+      },
+      "starvationRate": {
+        "mean": 0.285,
+        "std": 0.096
+      },
+      "makespanHours": {
+        "mean": 44.467,
+        "std": 4.951
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 function createEvaluationService({ repositories, assertNumber, assertText, nowText = () => "" }) {
-  function saveEvaluation(body) {
+  function saveEvaluation(body, user = null) {
     const student = assertText(body.student, "学生");
     const code = assertNumber(body.code, "代码提交", 0, 100);
     const efficiency = assertNumber(body.efficiency, "算力效率", 0, 100);
@@ -11,6 +11,7 @@ function createEvaluationService({ repositories, assertNumber, assertText, nowTe
       action: "evaluation.saved",
       entityType: "evaluation",
       entityId: student,
+      actor: user ? String(user.id) : "system",
       details: { score, code, efficiency, delivery },
       createdAt: nowText(),
     });

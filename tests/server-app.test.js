@@ -100,7 +100,10 @@ async function request(app, method, url) {
 
     const res = await request(app, "POST", "/api/requests/1/approve");
     assert.equal(res.status, 409);
-    assert.deepEqual(JSON.parse(res.body), { error: "业务冲突" });
+    const body = JSON.parse(res.body);
+    assert.equal(body.error, "业务冲突");
+    assert.equal(body.code, "CONFLICT");
+    assert.equal(typeof body.requestId, "string");
   }
 
   {
@@ -115,7 +118,10 @@ async function request(app, method, url) {
 
     const res = await request(app, "GET", "http://localhost/api/state");
     assert.equal(res.status, 400);
-    assert.deepEqual(JSON.parse(res.body), { error: "绝对 URL 错误" });
+    const body = JSON.parse(res.body);
+    assert.equal(body.error, "绝对 URL 错误");
+    assert.equal(body.code, "BAD_REQUEST");
+    assert.equal(typeof body.requestId, "string");
   }
 
   {

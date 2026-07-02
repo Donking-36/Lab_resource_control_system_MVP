@@ -517,4 +517,32 @@ function createSandboxHarness(overrides = {}) {
   assert.deepEqual(names(calls), ["getSeedGpuNodes"]);
 }
 
+// A non-admin session cannot operate another student's sandbox.
+{
+  const { service } = createSandboxHarness({
+    box: {
+      id: "lab-rot-7",
+      student: "陈曦",
+      node_id: "node-a",
+      gpus: 1,
+      port: 8801,
+      status: "running",
+      snapshots: 1,
+      container_id: "container-7",
+      snapshot_image: "",
+    },
+  });
+  assert.throws(
+    () => service.toggleSandbox("lab-rot-7", { role: "student", displayName: "林可" }),
+    (error) => error instanceof HttpError && error.status === 403,
+  );
+}
+
+// Admins bypass the ownership check.
+{
+  const { calls, service } = createSandboxHarness();
+  service.toggleSandbox("lab-rot-7", { role: "admin", displayName: "管理员" });
+  assert.ok(calls.some((call) => call.name === "updateSandboxStatus"));
+}
+
 console.log("Server service tests passed");

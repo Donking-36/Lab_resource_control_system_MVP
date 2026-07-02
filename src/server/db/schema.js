@@ -1,3 +1,5 @@
+const SCHEMA_VERSION = "2-auth";
+
 function createSchema(db) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS gpu_nodes (
@@ -95,6 +97,30 @@ function createSchema(db) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_audit_events_created_at ON audit_events(id DESC);
+
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      display_name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+
+    CREATE TABLE IF NOT EXISTS schema_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 }
 
@@ -116,9 +142,14 @@ function migrateSchema(db) {
       db.exec(`ALTER TABLE sandboxes ADD COLUMN ${name} ${definition}`);
     }
   });
+
+  db.prepare(
+    "INSERT INTO schema_meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+  ).run(SCHEMA_VERSION);
 }
 
 module.exports = {
   createSchema,
   migrateSchema,
+  SCHEMA_VERSION,
 };

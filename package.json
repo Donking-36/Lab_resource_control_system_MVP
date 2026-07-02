@@ -7,10 +7,15 @@
     "start": "node server.js",
     "check": "node tests/check-syntax.js",
     "test:api": "node tests/api.test.js",
-    "test:server": "node tests/server-rules.test.js && node tests/scheduler.test.js && node tests/config.test.js && node tests/http-utils.test.js && node tests/gpu-monitor.test.js && node tests/docker-adapter.test.js && node tests/db-schema-seed.test.js && node tests/repositories.test.js && node tests/server-services.test.js && node tests/api-routes.test.js && node tests/server-app.test.js && node tests/static-routes.test.js",
+    "test:server": "node tests/server-rules.test.js && node tests/scheduler.test.js && node tests/config.test.js && node tests/http-utils.test.js && node tests/gpu-monitor.test.js && node tests/docker-adapter.test.js && node tests/docker-mock.test.js && node tests/passwords.test.js && node tests/rbac.test.js && node tests/auth-service.test.js && node tests/simulator.test.js && node tests/db-schema-seed.test.js && node tests/db-migration.test.js && node tests/repositories.test.js && node tests/server-services.test.js && node tests/api-routes.test.js && node tests/server-app.test.js && node tests/static-routes.test.js",
     "test:client": "node tests/client-state.test.js && node tests/client-dom.test.js && node tests/client-rules.test.js && node tests/client-api.test.js && node tests/client-render.test.js && node tests/client-render-parts.test.js && node tests/client-events.test.js",
     "test:rules": "npm run test:server && npm run test:client",
-    "test": "npm run check && npm run test:rules && npm run test:api"
+    "test": "npm run check && npm run test:rules && npm run test:api",
+    "simulate": "node scripts/simulate.js",
+    "db:init": "node scripts/db-init.js",
+    "db:backup": "node scripts/db-backup.js",
+    "db:check": "node scripts/db-check.js",
+    "verify": "npm run check && npm run test:rules && npm run test:api && npm run simulate && npm run db:init && npm run db:check"
   },
   "engines": {
     "node": ">=24.0.0"

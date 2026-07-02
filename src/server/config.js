@@ -17,6 +17,10 @@ function createConfig(env = process.env, root = DEFAULT_ROOT) {
     PORT: Number(env.PORT || 3000),
     CONTAINER_PORT: Number(env.LAB_CONTAINER_PORT || 8888),
     IMAGE_TEMPLATES: { ...DEFAULT_IMAGE_TEMPLATES },
+    DOCKER_MODE: env.LAB_DOCKER_MODE === "mock" ? "mock" : "real",
+    SESSION_TTL_MS: Number(env.LAB_SESSION_TTL_MS || 8 * 60 * 60 * 1000),
+    BOOTSTRAP_ADMIN_PASSWORD: env.LAB_BOOTSTRAP_ADMIN_PASSWORD || "",
+    SEED_TEST_USERS: env.LAB_SEED_TEST_USERS === "1",
   };
 }
 
@@ -30,4 +34,8 @@ module.exports = {
   PORT: config.PORT,
   CONTAINER_PORT: config.CONTAINER_PORT,
   IMAGE_TEMPLATES: config.IMAGE_TEMPLATES,
+  DOCKER_MODE: config.DOCKER_MODE,
+  SESSION_TTL_MS: config.SESSION_TTL_MS,
+  BOOTSTRAP_ADMIN_PASSWORD: config.BOOTSTRAP_ADMIN_PASSWORD,
+  SEED_TEST_USERS: config.SEED_TEST_USERS,
 };

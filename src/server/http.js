@@ -54,6 +54,37 @@ function readJson(req) {
   });
 }
 
+function parseCookies(req) {
+  const header = (req.headers && req.headers.cookie) || "";
+  const jar = {};
+  header.split(";").forEach((part) => {
+    const index = part.indexOf("=");
+    if (index === -1) return;
+    const key = part.slice(0, index).trim();
+    if (!key) return;
+    try {
+      jar[key] = decodeURIComponent(part.slice(index + 1).trim());
+    } catch {
+      jar[key] = part.slice(index + 1).trim();
+    }
+  });
+  return jar;
+}
+
+function setCookie(res, name, value, options = {}) {
+  const segments = [`${name}=${encodeURIComponent(value)}`];
+  if (options.maxAge != null) segments.push(`Max-Age=${Math.floor(options.maxAge)}`);
+  segments.push(`Path=${options.path || "/"}`);
+  if (options.httpOnly !== false) segments.push("HttpOnly");
+  segments.push(`SameSite=${options.sameSite || "Strict"}`);
+  if (options.secure) segments.push("Secure");
+
+  const existing = typeof res.getHeader === "function" ? res.getHeader("Set-Cookie") : null;
+  const cookies = existing ? (Array.isArray(existing) ? existing.slice() : [existing]) : [];
+  cookies.push(segments.join("; "));
+  res.setHeader("Set-Cookie", cookies);
+}
+
 function assertText(value, field) {
   const text = String(value ?? "").trim();
   if (!text) throw new HttpError(400, `${field} 不能为空`);
@@ -71,6 +102,8 @@ function assertNumber(value, field, min, max) {
 module.exports = {
   json,
   readJson,
+  parseCookies,
+  setCookie,
   assertText,
   assertNumber,
 };

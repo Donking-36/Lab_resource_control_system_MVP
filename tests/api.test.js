@@ -22,6 +22,8 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+let cookieJar = "";
+
 async function request(baseUrl, pathname, options = {}) {
   const headers = { ...(options.headers || {}) };
   const init = { ...options, headers };
@@ -30,8 +32,16 @@ async function request(baseUrl, pathname, options = {}) {
     init.body = JSON.stringify(options.body);
     headers["Content-Type"] = "application/json";
   }
+  if (cookieJar) headers.Cookie = cookieJar;
 
   const response = await fetch(`${baseUrl}${pathname}`, init);
+
+  const setCookie = response.headers.get("set-cookie");
+  if (setCookie) {
+    const match = setCookie.match(/lab_session=([^;]*)/);
+    if (match) cookieJar = match[1] ? `lab_session=${match[1]}` : "";
+  }
+
   const text = await response.text();
   let body = null;
   if (text) {
@@ -79,6 +89,8 @@ async function main() {
       ...process.env,
       PORT: String(port),
       LAB_MVP_DB: dbPath,
+      LAB_SEED_TEST_USERS: "1",
+      LAB_DOCKER_MODE: "mock",
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
@@ -93,6 +105,24 @@ async function main() {
     const health = await waitForServer(baseUrl, child, logs);
     assert.equal(health.ok, true);
     assert.equal(typeof health.database, "string");
+    assert.equal(health.docker.mode, "mock");
+
+    // Business endpoints now require a session.
+    const anon = await request(baseUrl, "/api/state");
+    assert.equal(anon.status, 401);
+    assert.equal(anon.body.code, "UNAUTHENTICATED");
+    assert.equal(typeof anon.body.requestId, "string");
+
+    const login = await request(baseUrl, "/api/auth/login", {
+      method: "POST",
+      body: { username: "admin", password: "admin-test-pass" },
+    });
+    assert.equal(login.status, 200);
+    assert.equal(login.body.user.role, "admin");
+
+    const me = await request(baseUrl, "/api/auth/me");
+    assert.equal(me.status, 200);
+    assert.equal(me.body.user.username, "admin");
 
     const state = await request(baseUrl, "/api/state");
     assert.equal(state.status, 200);

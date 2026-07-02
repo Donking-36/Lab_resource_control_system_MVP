@@ -32,21 +32,47 @@ function createStateService({
     };
   }
 
-  function getState() {
+  function getState(user = null) {
     const gpu = getGpuNodes();
     const requests = repositories.getRequests();
     const sandboxes = repositories.getSandboxes();
-    return {
+    const rotations = repositories.getRotations();
+    const evaluations = repositories.getEvaluations();
+    const knowledge = repositories.getKnowledge();
+    const scheduling = buildSchedulingSnapshot({ requests, sandboxes, gpuNodes: gpu.nodes });
+
+    const base = {
       gpuNodes: gpu.nodes,
       gpuMonitor: gpu.monitor,
       requests,
       sandboxes,
-      rotations: repositories.getRotations(),
-      evaluations: repositories.getEvaluations(),
-      knowledge: repositories.getKnowledge(),
-      scheduling: buildSchedulingSnapshot({ requests, sandboxes, gpuNodes: gpu.nodes }),
+      rotations,
+      evaluations,
+      knowledge,
+      scheduling,
       auditEvents: repositories.getAuditEvents?.() || [],
+      viewer: user ? { role: user.role, displayName: user.displayName } : null,
     };
+
+    // No session (unit tests / internal callers) or admin: full visibility.
+    if (!user || user.role === "admin") return base;
+
+    // Student: only their own resources, no audit trail.
+    if (user.role === "student") {
+      const mine = user.displayName;
+      return {
+        ...base,
+        requests: requests.filter((request) => request.student === mine),
+        sandboxes: sandboxes.filter((box) => box.student === mine),
+        rotations: rotations.filter((rotation) => rotation.student === mine),
+        evaluations: evaluations.filter((evaluation) => evaluation.student === mine),
+        scheduling: { ...scheduling, decisions: scheduling.decisions.filter((decision) => decision.student === mine) },
+        auditEvents: [],
+      };
+    }
+
+    // Mentor: read-only oversight of rotations/evaluations/requests, no audit.
+    return { ...base, auditEvents: [] };
   }
 
   return {

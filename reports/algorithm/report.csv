@@ -1,0 +1,4 @@
+policy,avgWaitHours,p95WaitHours,jainIndex,gpuUtilization,throughputPerHour,starvationRate
+fifo,11.605,24.2,0.41,0.839,0.759,0.429
+sjf,6.405,28.267,0.419,0.821,0.744,0.215
+xfs-v1,8.857,28.9,0.46,0.905,0.819,0.285

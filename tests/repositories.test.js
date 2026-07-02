@@ -39,7 +39,7 @@ repositories.commit();
 repositories.rollback();
 assert.deepEqual(
   db.calls.filter((call) => call.type === "exec").map((call) => call.sql),
-  ["BEGIN", "COMMIT", "ROLLBACK"],
+  ["BEGIN IMMEDIATE", "COMMIT", "ROLLBACK"],
 );
 
 repositories.insertRequest({

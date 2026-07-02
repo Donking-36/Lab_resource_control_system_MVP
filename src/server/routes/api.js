@@ -13,6 +13,7 @@ function createApiHandler({
   progressRotation,
   remindRotation,
   saveEvaluation,
+  getAlgorithmReport = () => ({}),
   nowText,
   readJson,
   json,
@@ -26,13 +27,15 @@ function createApiHandler({
     }
   }
 
-  return async function handleApi(req, res, pathname) {
+  return async function handleApi(req, res, pathname, context = {}) {
+    const user = context.user || null;
+
     if (req.method === "GET" && pathname === "/api/health") {
       json(res, 200, { ok: true, database: databasePath, docker: docker.getDockerHealth(), time: nowText() });
       return;
     }
     if (req.method === "GET" && pathname === "/api/state") {
-      json(res, 200, getState());
+      json(res, 200, getState(user));
       return;
     }
     if (req.method === "GET" && pathname === "/api/gpu-nodes") {
@@ -40,59 +43,63 @@ function createApiHandler({
       json(res, 200, { gpuNodes: gpu.nodes, gpuMonitor: gpu.monitor });
       return;
     }
+    if (req.method === "GET" && pathname === "/api/algorithm/report") {
+      json(res, 200, getAlgorithmReport());
+      return;
+    }
     if (req.method === "POST" && pathname === "/api/requests") {
-      createRequest(await readJson(req));
-      json(res, 201, getState());
+      createRequest(await readJson(req), user);
+      json(res, 201, getState(user));
       return;
     }
     if (req.method === "POST" && pathname === "/api/schedule/next") {
-      const decision = scheduleNextRequest();
-      json(res, 200, { ...getState(), scheduledDecision: decision });
+      const decision = scheduleNextRequest(user);
+      json(res, 200, { ...getState(user), scheduledDecision: decision });
       return;
     }
 
     const approveMatch = pathname.match(/^\/api\/requests\/(\d+)\/approve$/);
     if (req.method === "POST" && approveMatch) {
-      approveRequest(Number(approveMatch[1]));
-      json(res, 200, getState());
+      approveRequest(Number(approveMatch[1]), null, user);
+      json(res, 200, getState(user));
       return;
     }
 
     const rejectMatch = pathname.match(/^\/api\/requests\/(\d+)\/reject$/);
     if (req.method === "POST" && rejectMatch) {
-      rejectRequest(Number(rejectMatch[1]));
-      json(res, 200, getState());
+      rejectRequest(Number(rejectMatch[1]), user);
+      json(res, 200, getState(user));
       return;
     }
 
     const sandboxMatch = pathname.match(/^\/api\/sandboxes\/([^/]+)$/);
     if (req.method === "DELETE" && sandboxMatch) {
-      releaseSandbox(decodePathParam(sandboxMatch[1]));
-      json(res, 200, getState());
+      releaseSandbox(decodePathParam(sandboxMatch[1]), user);
+      json(res, 200, getState(user));
       return;
     }
 
     const sandboxActionMatch = pathname.match(/^\/api\/sandboxes\/([^/]+)\/(toggle|snapshot)$/);
     if (req.method === "POST" && sandboxActionMatch) {
       const id = decodePathParam(sandboxActionMatch[1]);
-      if (sandboxActionMatch[2] === "toggle") toggleSandbox(id);
-      if (sandboxActionMatch[2] === "snapshot") snapshotSandbox(id);
-      json(res, 200, getState());
+      if (sandboxActionMatch[2] === "toggle") toggleSandbox(id, user);
+      if (sandboxActionMatch[2] === "snapshot") snapshotSandbox(id, user);
+      json(res, 200, getState(user));
       return;
     }
 
     const rotationMatch = pathname.match(/^\/api\/rotations\/(\d+)\/(progress|remind)$/);
     if (req.method === "POST" && rotationMatch) {
       const id = Number(rotationMatch[1]);
-      if (rotationMatch[2] === "progress") progressRotation(id);
-      if (rotationMatch[2] === "remind") remindRotation(id);
-      json(res, 200, getState());
+      if (rotationMatch[2] === "progress") progressRotation(id, user);
+      if (rotationMatch[2] === "remind") remindRotation(id, user);
+      json(res, 200, getState(user));
       return;
     }
 
     if (req.method === "POST" && pathname === "/api/evaluations") {
-      saveEvaluation(await readJson(req));
-      json(res, 200, getState());
+      saveEvaluation(await readJson(req), user);
+      json(res, 200, getState(user));
       return;
     }
 

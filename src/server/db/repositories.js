@@ -17,7 +17,7 @@ function toNode(row) {
 function createRepositories(db, { containerPort, inspectContainerStatus }) {
   return {
     begin() {
-      db.exec("BEGIN");
+      db.exec("BEGIN IMMEDIATE");
     },
 
     commit() {
@@ -155,7 +155,7 @@ function createRepositories(db, { containerPort, inspectContainerStatus }) {
 
     insertSandboxFromAllocation({ id, request, nodeId, port, container, createdAt }) {
       db.prepare(`
-        INSERT OR REPLACE INTO sandboxes (
+        INSERT INTO sandboxes (
           id, student, node_id, gpus, port, image, dataset, status, snapshots,
           container_id, container_name, host_port, container_port, mount_path, created_at, last_error, snapshot_image
         )
@@ -288,6 +288,59 @@ function createRepositories(db, { containerPort, inspectContainerStatus }) {
 
     getKnowledge() {
       return db.prepare("SELECT id, topic, owner, ancestor, issue, solution, repo FROM knowledge ORDER BY id").all();
+    },
+
+    countUsers() {
+      return db.prepare("SELECT COUNT(*) AS count FROM users").get().count;
+    },
+
+    getUserByUsername(username) {
+      return db.prepare("SELECT * FROM users WHERE username = ?").get(username);
+    },
+
+    getUserById(id) {
+      return db.prepare("SELECT * FROM users WHERE id = ?").get(id);
+    },
+
+    insertUser(user) {
+      return db
+        .prepare("INSERT INTO users (username, display_name, role, password_hash, created_at) VALUES (?, ?, ?, ?, ?)")
+        .run(user.username, user.displayName, user.role, user.passwordHash, user.createdAt);
+    },
+
+    createSession(session) {
+      db.prepare("INSERT INTO sessions (token, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)").run(
+        session.token,
+        session.userId,
+        session.expiresAt,
+        session.createdAt,
+      );
+    },
+
+    getSession(token) {
+      const row = db
+        .prepare(`
+          SELECT s.token, s.user_id, s.expires_at, u.username, u.display_name, u.role
+          FROM sessions s
+          JOIN users u ON u.id = s.user_id
+          WHERE s.token = ?
+        `)
+        .get(token);
+      if (!row) return null;
+      return {
+        token: row.token,
+        userId: row.user_id,
+        expiresAt: row.expires_at,
+        user: { id: row.user_id, username: row.username, displayName: row.display_name, role: row.role },
+      };
+    },
+
+    deleteSession(token) {
+      db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+    },
+
+    deleteExpiredSessions(nowMs) {
+      db.prepare("DELETE FROM sessions WHERE expires_at <= ?").run(nowMs);
     },
   };
 }
