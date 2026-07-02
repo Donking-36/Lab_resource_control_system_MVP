@@ -340,19 +340,21 @@
 
         <section id="knowledge" class="section-band two-column knowledge-layout">
           <div class="panel">
-            <div class="panel-header">
+            <div class="panel-header knowledge-panel-header">
               <div>
                 <p class="eyebrow">传承</p>
                 <h2>科研知识图谱</h2>
               </div>
-              <select id="knowledgeFilter" aria-label="研究方向筛选">
+              <select id="knowledgeFilter" class="knowledge-filter" aria-label="研究方向筛选">
                 <option value="all">全部方向</option>
                 <option value="医学图像分割">医学图像分割</option>
                 <option value="目标检测">目标检测</option>
                 <option value="小模型微调">小模型微调</option>
               </select>
             </div>
-            <svg id="knowledgeGraph" class="knowledge-graph" viewBox="0 0 720 360" role="img" aria-label="科研知识图谱"></svg>
+            <div class="knowledge-graph-frame" tabindex="0" aria-label="科研知识图谱，可横向滚动查看">
+              <svg id="knowledgeGraph" class="knowledge-graph" viewBox="0 0 720 390" role="img" aria-label="科研知识图谱"></svg>
+            </div>
           </div>
 
           <div class="panel">

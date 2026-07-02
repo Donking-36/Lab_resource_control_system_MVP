@@ -194,6 +194,42 @@ try {
     cleanup();
   }
 
+  {
+    const { part, cleanup } = loadPart("knowledge");
+    const attributes = {};
+    const els = {
+      knowledgeList: { innerHTML: "" },
+      knowledgeGraph: {
+        innerHTML: "",
+        setAttribute(name, value) {
+          attributes[name] = value;
+        },
+      },
+    };
+    const records = [
+      { topic: "医学图像分割", owner: "陈曦", ancestor: "王宁", issue: "问题一", solution: "方案一", repo: "lab/seg" },
+      { topic: "目标检测", owner: "赵明", ancestor: "孙航", issue: "问题二", solution: "方案二", repo: "lab/detect" },
+      { topic: "超长研究方向名称需要省略显示", owner: "林可", ancestor: "刘澈", issue: "问题三", solution: "方案三", repo: "lab/llm" },
+    ];
+    const renderer = part.createKnowledgeRenderer({
+      state: { knowledge: records },
+      els,
+      documentRef: { querySelector: () => ({ value: "all" }) },
+      rules: { escapeHtml },
+    });
+
+    renderer.renderKnowledge();
+
+    assert.equal(attributes.viewBox, "0 0 720 396");
+    assert.equal((els.knowledgeGraph.innerHTML.match(/<rect class="graph-node/g) || []).length, 13);
+    assert.ok(!els.knowledgeGraph.innerHTML.includes("<circle"));
+    assert.match(els.knowledgeGraph.innerHTML, /研究方向/);
+    assert.match(els.knowledgeGraph.innerHTML, /超长研究方向名称…/);
+    assert.match(els.knowledgeGraph.innerHTML, /<title>超长研究方向名称需要省略显示<\/title>/);
+
+    cleanup();
+  }
+
   console.log("Client render part tests passed");
 } finally {
   delete globalThis.LabRenderParts;
