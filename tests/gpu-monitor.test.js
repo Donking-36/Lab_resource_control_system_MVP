@@ -37,4 +37,19 @@ assert.deepEqual(nodes, [
   },
 ]);
 
+// 回归：Windows 桌面/浏览器底噪（低利用率 + 少量常驻显存）不得把空闲 GPU 判为占用。
+{
+  const [idleDesktop, computing] = parseNvidiaSmiOutput(
+    [
+      "0, NVIDIA GeForce RTX 5090 Laptop GPU, 4, 24576, 3072",
+      "1, NVIDIA GeForce RTX 5090 Laptop GPU, 85, 24576, 2048",
+    ].join("\n"),
+    "/lab/root",
+  );
+
+  assert.equal(idleDesktop.usedGpu, 0, "3/24GB 桌面底噪应视为空闲");
+  assert.equal(idleDesktop.memoryUsed, 3);
+  assert.equal(computing.usedGpu, 1, "高利用率应视为占用");
+}
+
 console.log("GPU monitor tests passed");

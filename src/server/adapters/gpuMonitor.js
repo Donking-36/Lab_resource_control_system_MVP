@@ -21,12 +21,16 @@ function parseNvidiaSmiOutput(output, root) {
       const utilization = Number(utilRaw) || 0;
       const memoryTotalGb = Math.max(1, Math.round((Number(memoryTotalRaw) || 0) / 1024));
       const memoryUsedGb = Math.max(0, Math.round((Number(memoryUsedRaw) || 0) / 1024));
+      // 桌面合成器/浏览器常驻占用 1-3GB 显存并造成低利用率抖动（尤其 Windows 笔记本独显），
+      // 不能把任何非零显存都判为“GPU 被占用”。只有持续计算（利用率 >= 30%）
+      // 或大块显存分配（>= 总量 30%，训练任务的典型特征）才视为忙碌。
+      const busy = utilization >= 30 || memoryUsedGb / memoryTotalGb >= 0.3;
       return {
         id: `local-gpu-${index}`,
         name: `GPU-${index} ${nameRaw}`,
         gpu: `1 x ${nameRaw}`,
         totalGpu: 1,
-        usedGpu: utilization > 5 || memoryUsedGb > 0 ? 1 : 0,
+        usedGpu: busy ? 1 : 0,
         memoryTotal: memoryTotalGb,
         memoryUsed: memoryUsedGb,
         mount: root,
