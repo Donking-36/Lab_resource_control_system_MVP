@@ -2,7 +2,7 @@
   root.LabRenderParts = root.LabRenderParts || {};
   root.LabRenderParts.rotations = factory();
 })(typeof globalThis !== "undefined" ? globalThis : self, function createRotationPart() {
-  function createRotationRenderer({ state, els, rules }) {
+  function createRotationRenderer({ state, els, rules, permissions }) {
     const { escapeHtml, isRotationRisk } = rules;
 
     function renderRotations() {
@@ -33,10 +33,10 @@
                 <span class="${risky ? "chip amber" : "chip"}">${risky ? "触发提醒" : "进度正常"}</span>
               </header>
               <div class="gantt">${stageRows}</div>
-              <div class="rotation-actions">
-                <button class="small-button" type="button" data-action="progress" data-id="${rotation.id}">推进节点</button>
-                <button class="small-button" type="button" data-action="remind" data-id="${rotation.id}">发送提醒</button>
-              </div>
+              ${permissions.can(state.user, "rotation:manage") ? `<div class="rotation-actions">
+                <button class="small-button" type="button" data-action="progress" data-id="${rotation.id}" data-pending-key="progress-${rotation.id}">推进节点</button>
+                <button class="small-button" type="button" data-action="remind" data-id="${rotation.id}" data-pending-key="remind-${rotation.id}">发送提醒</button>
+              </div>` : ""}
             </article>
           `;
         })
