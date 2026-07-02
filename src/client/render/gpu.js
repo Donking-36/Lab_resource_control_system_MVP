@@ -13,7 +13,8 @@
 
       els.gpuGrid.innerHTML = state.gpuNodes
         .map((node) => {
-          const gpuPct = pct(node.usedGpu, node.totalGpu);
+          // 真实节点带 nvidia-smi 瞬时利用率，直接显示；种子节点回退到整卡计数占比。
+          const gpuPct = Number.isFinite(node.utilization) ? node.utilization : pct(node.usedGpu, node.totalGpu);
           const memPct = pct(node.memoryUsed, node.memoryTotal);
           const chipClass = gpuPct >= 90 ? "chip red" : gpuPct >= 70 ? "chip amber" : "chip";
           const ports = Array.isArray(node.ports) ? node.ports : [];

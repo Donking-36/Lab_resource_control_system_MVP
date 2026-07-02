@@ -494,6 +494,25 @@ function createSandboxHarness(overrides = {}) {
   assert.deepEqual(names(calls), ["queryRealGpuNodes", "upsertRealGpuNode", "getGpuNodesBySource"]);
 }
 
+// 真实节点的瞬时利用率应叠加到数据库行上返回给前端。
+{
+  const dbRow = { id: "local-gpu-0", totalGpu: 1, usedGpu: 0 };
+  const service = createStateService({
+    root: "/lab",
+    repositories: {
+      upsertRealGpuNode() {},
+      getGpuNodesBySource: () => [dbRow],
+    },
+    queryRealGpuNodes: () => [{ id: "local-gpu-0", utilization: 37 }],
+    nowText: () => "13:10",
+  });
+
+  const { nodes } = service.getGpuNodes();
+  assert.equal(nodes[0].utilization, 37);
+  assert.equal(nodes[0].usedGpu, 0);
+  assert.ok(!("utilization" in dbRow), "数据库行本身不被修改");
+}
+
 {
   const calls = [];
   const service = createStateService({

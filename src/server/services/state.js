@@ -14,8 +14,14 @@ function createStateService({
       const realNodes = queryRealGpuNodes(root);
       if (realNodes.length) {
         realNodes.forEach(upsertRealGpuNode);
+        // 利用率是瞬时读数，不入库：把刚从 nvidia-smi 读到的值叠加到数据库行上，
+        // 前端据此显示真实占用百分比（种子节点无此字段，回退到整卡计数）。
+        const utilizationById = new Map(realNodes.map((node) => [node.id, node.utilization]));
         return {
-          nodes: repositories.getGpuNodesBySource(),
+          nodes: repositories.getGpuNodesBySource().map((node) => {
+            const utilization = utilizationById.get(node.id);
+            return Number.isFinite(utilization) ? { ...node, utilization } : node;
+          }),
           monitor: { source: "nvidia-smi", updatedAt: nowText() },
         };
       }

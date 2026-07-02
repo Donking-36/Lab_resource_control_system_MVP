@@ -31,6 +31,7 @@ function parseNvidiaSmiOutput(output, root) {
         gpu: `1 x ${nameRaw}`,
         totalGpu: 1,
         usedGpu: busy ? 1 : 0,
+        utilization: Math.min(100, Math.max(0, Math.round(utilization))),
         memoryTotal: memoryTotalGb,
         memoryUsed: memoryUsedGb,
         mount: root,

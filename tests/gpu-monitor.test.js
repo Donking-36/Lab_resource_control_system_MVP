@@ -17,6 +17,7 @@ assert.deepEqual(nodes, [
     gpu: "1 x NVIDIA A100-SXM4-80GB",
     totalGpu: 1,
     usedGpu: 0,
+    utilization: 0,
     memoryTotal: 80,
     memoryUsed: 0,
     mount: "/lab/root",
@@ -29,6 +30,7 @@ assert.deepEqual(nodes, [
     gpu: "1 x NVIDIA GeForce RTX 4090",
     totalGpu: 1,
     usedGpu: 1,
+    utilization: 23,
     memoryTotal: 24,
     memoryUsed: 8,
     mount: "/lab/root",
@@ -49,7 +51,9 @@ assert.deepEqual(nodes, [
 
   assert.equal(idleDesktop.usedGpu, 0, "3/24GB 桌面底噪应视为空闲");
   assert.equal(idleDesktop.memoryUsed, 3);
+  assert.equal(idleDesktop.utilization, 4, "真实利用率原样透出");
   assert.equal(computing.usedGpu, 1, "高利用率应视为占用");
+  assert.equal(computing.utilization, 85);
 }
 
 console.log("GPU monitor tests passed");
