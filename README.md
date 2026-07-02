@@ -4,7 +4,7 @@
 
 这是根据项目文档落地的 MVP，用于演示 AI 科研实验室中“算力资源分配”和“轮转进度管理”的核心闭环。当前版本包含前端工作台、Node 后端、SQLite 数据库、基于 `nvidia-smi` 的真实 GPU 监控接口，以及基于 Docker CLI 的容器生命周期调用。
 
-> 当前系统是 MVP 工程版：申请、沙箱记录、轮转进度、导师评分和知识条目已持久化到 SQLite；GPU 大盘会优先读取本机或服务器的 `nvidia-smi`；批准申请时会尝试通过 Docker 创建真实容器。若运行机器未安装 Docker，系统会返回明确错误，不会伪造容器创建成功。Kubernetes、登录权限和 GitHub 自动归档仍是后续接入项。
+> 当前系统是可答辩工程版：申请、沙箱、轮转、评分、知识、账号、会话和审计均持久化到 SQLite；本地账号支持学生、导师、管理员 RBAC；GPU 大盘优先读取 `nvidia-smi`，容器既可调用真实 Docker，也可在答辩测试中明确使用 Mock Docker。Kubernetes、学校 SSO 和 GitHub 自动归档仍是后续项。
 
 ## MVP 范围
 
@@ -22,6 +22,8 @@
 - [用户验证与反馈报告](validation-feedback-report.md)
 - [测试与部署说明](testing-deployment.md)
 - [架构说明](ARCHITECTURE.md)
+- [A → B API 契约](docs/api-contract.md)
+- [并行部分 B 验收说明](docs/part-b-acceptance.md)
 - [后续迭代计划](后续迭代计划.md)
 - [项目提交自查清单](项目提交自查清单.md)
 
@@ -34,9 +36,11 @@
 
 ## 运行方式
 
-先启动后端：
+答辩环境推荐启用三角色测试账号和 Mock Docker：
 
 ```powershell
+$env:LAB_SEED_TEST_USERS='1'
+$env:LAB_DOCKER_MODE='mock'
 npm start
 ```
 
@@ -49,6 +53,16 @@ http://localhost:3000
 数据库会自动生成在 `data/lab_resource.db`。需要 Node.js 24 或更高版本，因为本项目使用内置 `node:sqlite`。
 
 如需启用真实容器编排，还需要服务器或本机安装 Docker，并确保 `docker` 命令可用。GPU 容器还需要 NVIDIA 驱动和 NVIDIA Container Toolkit。
+
+登录账号：`admin/admin-test-pass`、`mentor/mentor-test-pass`、`lin/lin-test-pass`。生产式启动不应设置 `LAB_SEED_TEST_USERS`，而应通过 `LAB_BOOTSTRAP_ADMIN_PASSWORD` 创建管理员。
+
+完整验证：
+
+```powershell
+npm test
+npm run test:e2e
+npm run verify:b
+```
 
 ## 工程结构
 
@@ -63,6 +77,9 @@ http://localhost:3000
 已完成：
 
 - 前端 MVP 工作台：GPU 大盘、算力申请、信用队列、沙箱、轮转 WBS、导师评分、知识图谱。
+- 角色化前端：真实登录会话、学生/导师/管理员权限界面、错误请求 ID、重复提交防护和确认对话框。
+- 算法证据：页面展示 FIFO、SJF、XFS-V1 的确定性对照实验。
+- 浏览器验收：Playwright 覆盖三角色、越权、移动端和破坏性操作确认。
 - 后端 API 与 SQLite：申请、审批、沙箱、进度、评分和知识条目均可持久化。
 - 真实 GPU 监控：有 NVIDIA 驱动时读取 `nvidia-smi`；无 GPU 或读取失败时使用数据库回退数据。
 - Docker 编排接口：批准、暂停、恢复、快照、释放均已调用 Docker CLI，并已完成本机实机验收。
@@ -73,7 +90,7 @@ http://localhost:3000
 
 - 用户反馈访谈摘要已覆盖导师、轮转学生、管理员三类角色；联系方式仍需团队补充或公开版打码说明。
 - Docker 部分已完成实机截图归档；答辩时可现场复现页面批准分配和 `docker ps` 对照。
-- 如评审要求多人权限隔离，需要说明当前仅为 MVP 演示视角，未实现登录鉴权。
+- 登录鉴权和 RBAC 已完成；答辩时分别登录三种账号展示权限边界。
 
 ## 预览
 
