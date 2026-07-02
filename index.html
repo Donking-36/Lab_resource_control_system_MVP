@@ -19,6 +19,7 @@
 
         <nav class="nav-list" aria-label="主导航">
           <a href="#overview" class="active">总览</a>
+          <a href="#intelligence">智能决策</a>
           <a href="#resources">GPU 大盘</a>
           <a href="#requests">算力申请</a>
           <a href="#sandboxes">沙箱编排</a>
@@ -76,6 +77,35 @@
             <strong id="metricQueue">0</strong>
             <small>按信用排序</small>
           </article>
+          <article class="metric-card">
+            <span>Jain 公平指数</span>
+            <strong id="metricFairness">1.000</strong>
+            <small>越接近 1 越公平</small>
+          </article>
+        </section>
+
+        <section id="intelligence" class="section-band two-column intelligence-layout">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">XFS-V1</p>
+                <h2>可解释公平调度</h2>
+                <p class="panel-note">融合紧急度、信用、等待老化、GPU·小时效率与当前资源公平性，节点选择同时考虑容量、显存、最佳适配和数据可信度。</p>
+              </div>
+              <span class="status-pill">后端权威决策</span>
+            </div>
+            <div id="scheduleBoard" class="decision-board"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">TRACE</p>
+                <h2>决策审计链</h2>
+                <p class="panel-note">关键资源、进度和评价操作以结构化事件持久化，支持复盘与责任追踪。</p>
+              </div>
+            </div>
+            <div id="auditList" class="audit-list"></div>
+          </div>
         </section>
 
         <section id="resources" class="section-band two-column">
@@ -118,7 +148,7 @@
               <div class="prediction-card">
                 <span>预计训练时长</span>
                 <strong id="predictedHours">0 小时</strong>
-                <small id="predictionHint">依据历史任务样本估计</small>
+                <small id="predictionHint">计算不确定性区间</small>
               </div>
             </div>
           </div>
@@ -180,7 +210,7 @@
               <div>
                 <p class="eyebrow">队列</p>
                 <h2>信用调度</h2>
-                <p class="panel-note">排序参考紧急度、信用分、GPU 数和预计时长，用于演示资源分配依据。</p>
+                <p class="panel-note">由后端 XFS-V1 公平调度器排序；每个分量与推荐节点均可解释、可审计。</p>
               </div>
               <button id="autoScheduleBtn" class="secondary-button" type="button">自动调度</button>
             </div>
@@ -303,6 +333,7 @@
     <script src="src/client/render/rotations.js"></script>
     <script src="src/client/render/evaluations.js"></script>
     <script src="src/client/render/knowledge.js"></script>
+    <script src="src/client/render/intelligence.js"></script>
     <script src="src/client/render/controls.js"></script>
     <script src="src/client/render.js"></script>
     <script src="src/client/events.js"></script>

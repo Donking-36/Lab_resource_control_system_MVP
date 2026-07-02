@@ -1,4 +1,10 @@
-function createStateService({ root, repositories, queryRealGpuNodes, nowText }) {
+function createStateService({
+  root,
+  repositories,
+  queryRealGpuNodes,
+  nowText,
+  buildSchedulingSnapshot = () => ({ algorithm: "unavailable", fairnessIndex: 1, decisions: [] }),
+}) {
   function upsertRealGpuNode(node) {
     repositories.upsertRealGpuNode(node, nowText());
   }
@@ -28,14 +34,18 @@ function createStateService({ root, repositories, queryRealGpuNodes, nowText }) 
 
   function getState() {
     const gpu = getGpuNodes();
+    const requests = repositories.getRequests();
+    const sandboxes = repositories.getSandboxes();
     return {
       gpuNodes: gpu.nodes,
       gpuMonitor: gpu.monitor,
-      requests: repositories.getRequests(),
-      sandboxes: repositories.getSandboxes(),
+      requests,
+      sandboxes,
       rotations: repositories.getRotations(),
       evaluations: repositories.getEvaluations(),
       knowledge: repositories.getKnowledge(),
+      scheduling: buildSchedulingSnapshot({ requests, sandboxes, gpuNodes: gpu.nodes }),
+      auditEvents: repositories.getAuditEvents?.() || [],
     };
   }
 

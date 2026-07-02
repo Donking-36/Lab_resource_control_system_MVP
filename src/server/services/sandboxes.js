@@ -1,4 +1,8 @@
 function createSandboxService({ repositories, docker, HttpError, returnPortToNode, nowText }) {
+  function audit(action, id, details = {}) {
+    repositories.appendAudit?.({ action, entityType: "sandbox", entityId: id, details, createdAt: nowText() });
+  }
+
   function releaseSandbox(id) {
     const box = repositories.getSandboxById(id);
     if (!box) throw new HttpError(404, "沙箱不存在");
@@ -14,6 +18,7 @@ function createSandboxService({ repositories, docker, HttpError, returnPortToNod
         repositories.updateNodeAllocation(box.node_id, returned);
       }
       repositories.deleteSandbox(id);
+      audit("sandbox.released", id, { nodeId: box.node_id, gpus: box.gpus, port: box.port });
       repositories.commit();
     } catch (error) {
       if (transactionStarted) repositories.rollback();
@@ -34,6 +39,7 @@ function createSandboxService({ repositories, docker, HttpError, returnPortToNod
       if (status === "paused") docker.pauseContainer(box);
       if (status === "running") docker.unpauseContainer(box);
       repositories.updateSandboxStatus(id, status);
+      audit(`sandbox.${status}`, id, { containerId: box.container_id });
     } catch (error) {
       repositories.updateSandboxError(id, error.message);
       throw error;
@@ -47,6 +53,7 @@ function createSandboxService({ repositories, docker, HttpError, returnPortToNod
     try {
       const snapshotImage = docker.commitContainer(box, nextVersion);
       repositories.updateSandboxSnapshot(id, nextVersion, snapshotImage || box.snapshot_image);
+      audit("sandbox.snapshotted", id, { version: nextVersion, snapshotImage });
     } catch (error) {
       repositories.updateSandboxError(id, error.message);
       throw error;

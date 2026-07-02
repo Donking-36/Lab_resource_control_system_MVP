@@ -13,6 +13,8 @@
     rotations: [],
     evaluations: [],
     knowledge: [],
+    auditEvents: [],
+    scheduling: { algorithm: "loading", fairnessIndex: 1, decisions: [] },
     gpuMonitor: { source: "loading" },
   };
 

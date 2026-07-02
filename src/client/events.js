@@ -27,7 +27,7 @@
       showToast("申请已驳回。");
     }
 
-    function autoSchedule() {
+    async function autoSchedule() {
       const queue = [...state.requests]
         .filter((request) => request.status === "waiting")
         .sort((a, b) => priorityScore(b) - priorityScore(a));
@@ -37,7 +37,8 @@
         return;
       }
 
-      approveRequest(queue[0].id).catch((error) => showToast(error.message));
+      await mutate("/api/schedule/next", { method: "POST" });
+      showToast("公平调度器已执行，并记录可解释决策审计。");
     }
 
     async function releaseSandbox(boxId) {
@@ -127,7 +128,9 @@
       documentRef.querySelector("#evaluationForm").addEventListener("submit", (event) => {
         saveEvaluation(event).catch((error) => showToast(error.message));
       });
-      documentRef.querySelector("#autoScheduleBtn").addEventListener("click", autoSchedule);
+      documentRef.querySelector("#autoScheduleBtn").addEventListener("click", () => {
+        autoSchedule().catch((error) => showToast(error.message));
+      });
       documentRef.querySelector("#refreshBtn").addEventListener("click", () => {
         refreshResources().catch((error) => showToast(error.message));
       });

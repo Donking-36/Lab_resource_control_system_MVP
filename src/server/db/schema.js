@@ -83,6 +83,18 @@ function createSchema(db) {
       solution TEXT NOT NULL,
       repo TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS audit_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      actor TEXT NOT NULL,
+      details_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_events_created_at ON audit_events(id DESC);
   `);
 }
 

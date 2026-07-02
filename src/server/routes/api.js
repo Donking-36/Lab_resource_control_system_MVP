@@ -6,6 +6,7 @@ function createApiHandler({
   createRequest,
   approveRequest,
   rejectRequest,
+  scheduleNextRequest,
   releaseSandbox,
   toggleSandbox,
   snapshotSandbox,
@@ -42,6 +43,11 @@ function createApiHandler({
     if (req.method === "POST" && pathname === "/api/requests") {
       createRequest(await readJson(req));
       json(res, 201, getState());
+      return;
+    }
+    if (req.method === "POST" && pathname === "/api/schedule/next") {
+      const decision = scheduleNextRequest();
+      json(res, 200, { ...getState(), scheduledDecision: decision });
       return;
     }
 

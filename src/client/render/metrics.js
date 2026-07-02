@@ -19,6 +19,7 @@
       els.metricContainers.textContent = String(state.sandboxes.filter((box) => box.status === "running").length);
       els.metricRisks.textContent = String(risks);
       els.metricQueue.textContent = String(waiting);
+      if (els.metricFairness) els.metricFairness.textContent = Number(state.scheduling?.fairnessIndex ?? 1).toFixed(3);
 
       const hotNodes = state.gpuNodes.filter((node) => pct(node.usedGpu, node.totalGpu) >= 90).length;
       const source = state.gpuMonitor?.source === "nvidia-smi" ? "真实 GPU" : "种子数据";

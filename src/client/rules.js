@@ -40,6 +40,18 @@
     return Math.max(1, Math.round(Number(datasetSize) * Number(epochCount) * base));
   }
 
+  function predictTraining(modelType, datasetSize, epochCount) {
+    const point = estimateTrainingHours(modelType, datasetSize, epochCount);
+    const uncertainty = Math.min(0.48, 0.2 + (modelType === "llm" ? 0.12 : 0) + (Number(datasetSize) > 500 ? 0.06 : 0));
+    return {
+      point,
+      lower: Math.max(1, Math.round(point * (1 - uncertainty))),
+      upper: Math.max(1, Math.round(point * (1 + uncertainty))),
+      confidence: uncertainty <= 0.25 ? "中高" : "中等",
+      method: "先验缩放模型 + 不确定性区间",
+    };
+  }
+
   function isRotationRisk(rotation) {
     return Number(rotation.gpuHours) > 60 && Number(rotation.lastUpdateDays) >= 5;
   }
@@ -50,6 +62,7 @@
     pct,
     priorityScore,
     estimateTrainingHours,
+    predictTraining,
     isRotationRisk,
   };
 });

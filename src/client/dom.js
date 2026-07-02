@@ -14,6 +14,7 @@
       metricContainers: documentRef?.querySelector("#metricContainers"),
       metricRisks: documentRef?.querySelector("#metricRisks"),
       metricQueue: documentRef?.querySelector("#metricQueue"),
+      metricFairness: documentRef?.querySelector("#metricFairness"),
       clusterStatus: documentRef?.querySelector("#clusterStatus"),
       gpuGrid: documentRef?.querySelector("#gpuGrid"),
       requestQueue: documentRef?.querySelector("#requestQueue"),
@@ -23,6 +24,8 @@
       evaluationSummary: documentRef?.querySelector("#evaluationSummary"),
       knowledgeGraph: documentRef?.querySelector("#knowledgeGraph"),
       knowledgeList: documentRef?.querySelector("#knowledgeList"),
+      scheduleBoard: documentRef?.querySelector("#scheduleBoard"),
+      auditList: documentRef?.querySelector("#auditList"),
       toast: documentRef?.querySelector("#toast"),
     };
 

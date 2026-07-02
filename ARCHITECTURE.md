@@ -11,6 +11,10 @@
 
 ## 后端模块
 
+新增的 `src/server/scheduler.js` 是纯函数算法内核：生成可解释申请排名、节点多目标匹配、等待老化分量和 Jain 公平指数。调度决策在后端执行，并随 `/api/state` 返回；`POST /api/schedule/next` 自动执行当前最高优先级且资源可满足的申请。
+
+`audit_events` 保存应用层 append-only 审计事件。资源申请、Docker 沙箱、轮转进度和导师评分服务均在状态变更时写入结构化事件。
+
 - `src/server/config.js`：根目录、数据库路径、端口、Docker 镜像模板，保留常量导出并提供可测试的 `createConfig()`。
 - `src/server/errors.js`：HTTP 错误类型。
 - `src/server/http.js`：JSON 响应、请求体读取、输入校验。

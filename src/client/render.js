@@ -7,7 +7,7 @@
   }
 })(typeof globalThis !== "undefined" ? globalThis : self, function createRender(parts) {
   function assertRenderParts() {
-    const required = ["metrics", "gpu", "requests", "sandboxes", "rotations", "evaluations", "knowledge", "controls"];
+    const required = ["metrics", "gpu", "requests", "sandboxes", "rotations", "evaluations", "knowledge", "intelligence", "controls"];
     const missing = required.filter((name) => !parts[name]);
     if (missing.length) {
       throw new Error(`缺少前端渲染模块：${missing.join(", ")}`);
@@ -30,6 +30,7 @@
     const rotations = parts.rotations.createRotationRenderer({ state, els, rules });
     const evaluations = parts.evaluations.createEvaluationRenderer({ state, els, rules });
     const knowledge = parts.knowledge.createKnowledgeRenderer({ state, els, documentRef, rules });
+    const intelligence = parts.intelligence.createIntelligenceRenderer({ state, els, rules });
     const controls = parts.controls.createControlRenderer({ documentRef, rules });
 
     function renderRoleHint() {
@@ -45,6 +46,7 @@
       rotations.renderRotations();
       evaluations.renderEvaluations();
       knowledge.renderKnowledge();
+      intelligence.renderIntelligence();
       controls.estimateHours();
       controls.applySearch();
     }

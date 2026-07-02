@@ -44,6 +44,10 @@ function createHandler() {
     rejectRequest(id) {
       calls.push({ name: "rejectRequest", id });
     },
+    scheduleNextRequest() {
+      calls.push({ name: "scheduleNextRequest" });
+      return { requestId: 7, score: 91.2 };
+    },
     releaseSandbox(id) {
       calls.push({ name: "releaseSandbox", id });
     },
@@ -96,6 +100,14 @@ async function request(handler, method, pathname, body) {
     assert.equal(res.status, 200);
     assert.equal(res.payload, state);
     assert.deepEqual(calls.map((call) => call.name), ["getState"]);
+  }
+
+  {
+    const { calls, handler } = createHandler();
+    const res = await request(handler, "POST", "/api/schedule/next");
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.payload, { ok: "state", scheduledDecision: { requestId: 7, score: 91.2 } });
+    assert.deepEqual(calls.map((call) => call.name), ["scheduleNextRequest", "getState"]);
   }
 
   {

@@ -96,18 +96,17 @@ class FakeFormData {
         },
       });
 
-      handlers.autoSchedule();
-      await Promise.resolve();
+      await handlers.autoSchedule();
 
       assert.equal(calls[0].name, "mutate");
-      assert.equal(calls[0].path, "/api/requests/2/approve");
+      assert.equal(calls[0].path, "/api/schedule/next");
       assert.deepEqual(calls[0].options, { method: "POST" });
-      assert.equal(calls.at(-1).message, "申请已批准并写入数据库。");
+      assert.equal(calls.at(-1).message, "公平调度器已执行，并记录可解释决策审计。");
     }
 
     {
       const { calls, handlers } = createHandlers();
-      handlers.autoSchedule();
+      await handlers.autoSchedule();
       assert.deepEqual(calls, [{ name: "showToast", message: "队列为空。" }]);
     }
 

@@ -12,6 +12,7 @@ const { assertNumber, assertText, json, readJson } = require("./src/server/http"
 const { createApiHandler } = require("./src/server/routes/api");
 const { createStaticHandler } = require("./src/server/routes/static");
 const { applyAllocationToNode, returnPortToNode, selectGpuNode } = require("./src/server/rules");
+const { buildSchedulingSnapshot, rankGpuNodes } = require("./src/server/scheduler");
 const { createEvaluationService } = require("./src/server/services/evaluations");
 const { createRequestService } = require("./src/server/services/requests");
 const { createRotationService } = require("./src/server/services/rotations");
@@ -39,6 +40,7 @@ const stateService = createStateService({
   repositories,
   queryRealGpuNodes,
   nowText,
+  buildSchedulingSnapshot,
 });
 const requestService = createRequestService({
   repositories,
@@ -49,6 +51,8 @@ const requestService = createRequestService({
   HttpError,
   applyAllocationToNode,
   selectGpuNode,
+  rankGpuNodes,
+  buildSchedulingSnapshot,
   nowText,
 });
 const sandboxService = createSandboxService({
@@ -58,8 +62,8 @@ const sandboxService = createSandboxService({
   returnPortToNode,
   nowText,
 });
-const rotationService = createRotationService({ repositories, HttpError });
-const evaluationService = createEvaluationService({ repositories, assertNumber, assertText });
+const rotationService = createRotationService({ repositories, HttpError, nowText });
+const evaluationService = createEvaluationService({ repositories, assertNumber, assertText, nowText });
 
 const handleApi = createApiHandler({
   databasePath: DB_PATH,
@@ -69,6 +73,7 @@ const handleApi = createApiHandler({
   createRequest: requestService.createRequest,
   approveRequest: requestService.approveRequest,
   rejectRequest: requestService.rejectRequest,
+  scheduleNextRequest: requestService.scheduleNextRequest,
   releaseSandbox: sandboxService.releaseSandbox,
   toggleSandbox: sandboxService.toggleSandbox,
   snapshotSandbox: sandboxService.snapshotSandbox,

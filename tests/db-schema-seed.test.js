@@ -52,6 +52,7 @@ function createFakeDb({ tableColumns = [], gpuNodeCount = 0 } = {}) {
     "CREATE TABLE IF NOT EXISTS rotation_stages",
     "CREATE TABLE IF NOT EXISTS evaluations",
     "CREATE TABLE IF NOT EXISTS knowledge",
+    "CREATE TABLE IF NOT EXISTS audit_events",
   ].forEach((fragment) => assert.ok(schemaSql.includes(fragment), fragment));
 }
 

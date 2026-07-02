@@ -1,4 +1,4 @@
-function createEvaluationService({ repositories, assertNumber, assertText }) {
+function createEvaluationService({ repositories, assertNumber, assertText, nowText = () => "" }) {
   function saveEvaluation(body) {
     const student = assertText(body.student, "学生");
     const code = assertNumber(body.code, "代码提交", 0, 100);
@@ -7,6 +7,13 @@ function createEvaluationService({ repositories, assertNumber, assertText }) {
     const score = assertNumber(body.score, "综合评分", 0, 100);
 
     repositories.upsertEvaluation({ student, score, code, efficiency, delivery });
+    repositories.appendAudit?.({
+      action: "evaluation.saved",
+      entityType: "evaluation",
+      entityId: student,
+      details: { score, code, efficiency, delivery },
+      createdAt: nowText(),
+    });
   }
 
   return {

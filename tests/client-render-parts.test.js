@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
 
-const { escapeHtml, estimateTrainingHours, isRotationRisk, pct, priorityScore } = require("../src/client/rules");
+const { escapeHtml, estimateTrainingHours, predictTraining, isRotationRisk, pct, priorityScore } = require("../src/client/rules");
 
 function loadPart(name) {
   const filePath = path.resolve(__dirname, `../src/client/render/${name}.js`);
@@ -27,6 +27,7 @@ try {
       metricContainers: { textContent: "" },
       metricRisks: { textContent: "" },
       metricQueue: { textContent: "" },
+      metricFairness: { textContent: "" },
       clusterStatus: { textContent: "", className: "" },
     };
     const renderer = part.createMetricsRenderer({
@@ -49,6 +50,7 @@ try {
           { status: "paused" },
         ],
         gpuMonitor: { source: "nvidia-smi" },
+        scheduling: { fairnessIndex: 0.75 },
       },
       els,
       rules: { isRotationRisk, pct },
@@ -65,6 +67,7 @@ try {
     assert.equal(els.metricContainers.textContent, "1");
     assert.equal(els.metricRisks.textContent, "1");
     assert.equal(els.metricQueue.textContent, "2");
+    assert.equal(els.metricFairness.textContent, "0.750");
     assert.equal(els.clusterStatus.textContent, "1 个节点高负载 · 真实 GPU");
     assert.equal(els.clusterStatus.className, "status-pill amber");
 
@@ -174,14 +177,14 @@ try {
     };
     const renderer = part.createControlRenderer({
       documentRef,
-      rules: { estimateTrainingHours },
+      rules: { estimateTrainingHours, predictTraining },
     });
 
     renderer.estimateHours();
     renderer.applySearch();
 
     assert.equal(elements["#predictedHours"].textContent, "2 小时");
-    assert.equal(elements["#predictionHint"].textContent, "可进入常规申请队列");
+    assert.equal(elements["#predictionHint"].textContent, "区间 1–3 小时 · 中等置信度 · 先验缩放模型 + 不确定性区间");
     assert.equal(cards[0].style.display, "");
     assert.equal(cards[1].style.display, "none");
 

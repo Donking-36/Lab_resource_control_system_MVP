@@ -90,7 +90,7 @@ function createDockerAdapter({ containerPort, imageTemplates, HttpError }) {
     ];
 
     if (request.gpus > 0 && !isLightweightDemoImage(request.image)) {
-      args.push("--gpus", "all");
+      args.push("--gpus", String(request.gpus));
     }
 
     args.push(image, ...dockerCommandForImage(request.image));

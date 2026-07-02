@@ -37,7 +37,7 @@ function createRepositories(db, { containerPort, inspectContainerStatus }) {
     },
 
     getGpuNodesBySource() {
-      return db.prepare("SELECT * FROM gpu_nodes ORDER BY source DESC, id").all().map(toNode);
+      return db.prepare("SELECT * FROM gpu_nodes WHERE source = 'nvidia-smi' ORDER BY id").all().map(toNode);
     },
 
     upsertRealGpuNode(node, nowText) {
@@ -95,7 +95,7 @@ function createRepositories(db, { containerPort, inspectContainerStatus }) {
     },
 
     insertRequest(request) {
-      db.prepare(`
+      return db.prepare(`
         INSERT INTO requests (student, topic, gpus, hours, urgency, image, dataset, credit, status, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?)
       `).run(
@@ -109,6 +109,30 @@ function createRepositories(db, { containerPort, inspectContainerStatus }) {
         request.credit,
         request.createdAt,
       );
+    },
+
+    appendAudit({ action, entityType, entityId, actor = "system", details = {}, createdAt }) {
+      return db
+        .prepare(`
+          INSERT INTO audit_events (action, entity_type, entity_id, actor, details_json, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `)
+        .run(action, entityType, String(entityId ?? ""), actor, JSON.stringify(details), createdAt);
+    },
+
+    getAuditEvents(limit = 30) {
+      return db
+        .prepare("SELECT * FROM audit_events ORDER BY id DESC LIMIT ?")
+        .all(limit)
+        .map((row) => ({
+          id: row.id,
+          action: row.action,
+          entityType: row.entity_type,
+          entityId: row.entity_id,
+          actor: row.actor,
+          details: JSON.parse(row.details_json || "{}"),
+          createdAt: row.created_at,
+        }));
     },
 
     updateNodeAllocation(nodeId, allocation) {

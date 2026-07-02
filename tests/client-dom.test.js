@@ -9,6 +9,7 @@ const expectedSelectors = {
   metricContainers: "#metricContainers",
   metricRisks: "#metricRisks",
   metricQueue: "#metricQueue",
+  metricFairness: "#metricFairness",
   clusterStatus: "#clusterStatus",
   gpuGrid: "#gpuGrid",
   requestQueue: "#requestQueue",
@@ -18,6 +19,8 @@ const expectedSelectors = {
   evaluationSummary: "#evaluationSummary",
   knowledgeGraph: "#knowledgeGraph",
   knowledgeList: "#knowledgeList",
+  scheduleBoard: "#scheduleBoard",
+  auditList: "#auditList",
   toast: "#toast",
 };
 

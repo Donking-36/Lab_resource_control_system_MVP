@@ -102,6 +102,9 @@ async function main() {
     assert.ok(Array.isArray(state.body.rotations));
     assert.ok(Array.isArray(state.body.evaluations));
     assert.ok(Array.isArray(state.body.knowledge));
+    assert.ok(Array.isArray(state.body.auditEvents));
+    assert.equal(state.body.scheduling.algorithm, "xfs-v1");
+    assert.ok(Array.isArray(state.body.scheduling.decisions));
 
     const gpuNodes = await request(baseUrl, "/api/gpu-nodes");
     assert.equal(gpuNodes.status, 200);

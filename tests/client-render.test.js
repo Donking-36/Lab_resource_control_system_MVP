@@ -26,7 +26,7 @@ try {
     const renderApi = loadRenderer({});
     assert.throws(
       () => renderApi.createRenderer({ state: {}, els: {}, documentRef: {}, rules: {} }),
-      /缺少前端渲染模块：metrics, gpu, requests, sandboxes, rotations, evaluations, knowledge, controls/,
+      /缺少前端渲染模块：metrics, gpu, requests, sandboxes, rotations, evaluations, knowledge, intelligence, controls/,
     );
   }
 
@@ -54,6 +54,9 @@ try {
       knowledge: {
         createKnowledgeRenderer: createPartFactory(["renderKnowledge"], calls),
       },
+      intelligence: {
+        createIntelligenceRenderer: createPartFactory(["renderIntelligence"], calls),
+      },
       controls: {
         createControlRenderer: createPartFactory(["estimateHours", "applySearch"], calls),
       },
@@ -71,6 +74,7 @@ try {
       "renderRotations",
       "renderEvaluations",
       "renderKnowledge",
+      "renderIntelligence",
       "estimateHours",
       "applySearch",
     ]);
