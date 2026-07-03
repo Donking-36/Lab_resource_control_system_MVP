@@ -1,42 +1,66 @@
 # 实验室资源与轮转进度管理系统 MVP
 
-> 当前增强版引入 XFS-V1 可解释公平调度、Jain 公平指数、不确定性感知训练预测、结构化审计事件、精确 Docker GPU 数量约束和浏览器安全响应头。算法公式、实验方法与团队协作规范见 [高标准软件工程与算法创新说明](ENGINEERING-INNOVATION.md)。
+面向 AI 科研实验室的资源管理与轮转协作平台，覆盖“算力申请 → 公平调度 → Docker 沙箱 → 轮转推进 → 导师评价 → 知识沉淀”的完整闭环。
 
-这是根据项目文档落地的 MVP，用于演示 AI 科研实验室中“算力资源分配”和“轮转进度管理”的核心闭环。当前版本包含前端工作台、Node 后端、SQLite 数据库、基于 `nvidia-smi` 的真实 GPU 监控接口，以及基于 Docker CLI 的容器生命周期调用。
+当前版本采用原生 HTML/CSS/JavaScript、Node.js 24、内置 `node:sqlite` 和 Docker CLI，无前端构建步骤。系统支持真实 GPU/Docker 环境，也提供明确标识的 Mock Docker 答辩模式。
 
-> 当前系统是可答辩工程版：申请、沙箱、轮转、评分、知识、账号、会话和审计均持久化到 SQLite；本地账号支持学生、导师、管理员 RBAC；GPU 大盘优先读取 `nvidia-smi`，容器既可调用真实 Docker，也可在答辩测试中明确使用 Mock Docker。Kubernetes、学校 SSO 和 GitHub 自动归档仍是后续项。
+算法公式、实验方法与工程规范见 [高标准软件工程与算法创新说明](ENGINEERING-INNOVATION.md)，模块边界见 [架构说明](ARCHITECTURE.md)。
 
-## MVP 范围
+## 当前版本亮点
 
-- GPU 算力大盘：优先展示 `nvidia-smi` 读取到的真实 GPU 状态，同时保留数据库节点用于演示调度闭环。
-- 训练时长预测：按模型类型、数据量和 epoch 估算训练耗时。
-- 信用调度队列：提交算力申请后写入 SQLite，并按紧急程度、信用分、GPU 数和时长排序。
-- 沙箱编排：批准申请后自动生成数据库中的容器记录，分配节点和端口，支持暂停、恢复、快照、释放。
-- 轮转 WBS：按学生展示阶段进度、GPU 消耗和进度风险提醒，进度更新写入 SQLite。
-- 导师评价：按代码提交、算力效率、按期完成三个维度生成综合评分，并持久化保存。
-- 科研知识图谱：按研究方向展示历史接力关系、典型问题、解决方案和代码分支。
+- **三角色 RBAC**：学生、导师、管理员使用真实登录会话，并在 API、服务层和页面操作三个层面限制权限。
+- **XFS-V1 可解释公平调度**：综合紧急度、信用分、等待老化、GPU·小时效率和当前资源公平性，并展示 Jain 公平指数与节点选择依据。
+- **真实持久化**：申请、沙箱、轮转、评分、知识、账号、会话和结构化审计事件均保存到 SQLite。
+- **双 Docker 模式**：生产/实机环境调用 Docker CLI；演示和端到端测试可使用内存 Mock Docker。
+- **GPU 状态回退**：优先读取 `nvidia-smi`，不可用时回退到数据库节点，页面会明确展示数据来源。
+- **安全与可恢复性**：HttpOnly 会话 Cookie、RBAC、输入校验、请求 ID、安全响应头、数据库迁移前自动备份。
+- **知识图谱 UI 优化**：采用“研究方向 → 接续人 → 知识沉淀”三列分行布局，避免节点与文字重叠；长名称保留完整悬浮说明，移动端支持横向滚动。
+- **自动化验证**：包含纯规则、服务、数据库、路由、前端渲染、API 集成和 Playwright 浏览器测试。
 
-## 提交材料
+## 功能范围
 
-- [MVP 需求优先级清单](requirements-priority.md)
-- [用户验证与反馈报告](validation-feedback-report.md)
-- [测试与部署说明](testing-deployment.md)
-- [架构说明](ARCHITECTURE.md)
-- [A → B API 契约](docs/api-contract.md)
-- [并行部分 B 验收说明](docs/part-b-acceptance.md)
-- [后续迭代计划](后续迭代计划.md)
-- [项目提交自查清单](项目提交自查清单.md)
+| 模块 | 当前能力 |
+| --- | --- |
+| GPU 大盘 | 展示 GPU 利用率、显存、可用端口、挂载目录及监控来源 |
+| 训练预测 | 根据模型类型、数据量和 epoch 给出耗时区间与置信度 |
+| 算力申请 | 保存 GPU 数量、预计时长、紧急度、镜像和数据集挂载 |
+| 公平调度 | XFS-V1 申请排序、节点匹配、自动调度、FIFO/SJF 对照报告 |
+| 沙箱管理 | 创建、暂停、恢复、快照、释放 Docker 容器 |
+| 轮转 WBS | 展示阶段进度、GPU 消耗、更新时间和风险提醒 |
+| 导师评价 | 按代码、算力效率和按期完成度生成综合评分 |
+| 知识图谱 | 按方向筛选历史接力关系、报错经验、解决方案和代码分支 |
+| 审计与安全 | 结构化审计、角色授权、所有权校验、请求 ID 和确认对话框 |
 
-建议提交时一并附上以下证据：
+## 环境要求
 
-- `mvp-screenshot.png` 和 `mvp-mobile.png`：桌面端、移动端界面截图。
-- `feedback-evidence/`：真实用户访谈摘要、问卷或聊天截图、试用过程截图。
-- 用户反馈证据：`feedback-evidence/用户反馈原始材料-访谈摘要.md`、`feedback-evidence/用户反馈-01-*` 至 `feedback-evidence/用户反馈-03-*`，以及 `feedback-evidence/用户反馈汇总与闭环处理.md`。
-- Docker 实机验收报告与截图：`feedback-evidence/Docker实机验收报告.md`、`Docker验收-01-*` 至 `Docker验收-04-*`。
+必需：
 
-## 运行方式
+- Node.js 24 或更高版本（项目使用内置 `node:sqlite`）
+- npm
 
-答辩环境推荐启用三角色测试账号和 Mock Docker：
+可选：
+
+- Docker：启用真实容器生命周期管理
+- NVIDIA 驱动与 `nvidia-smi`：读取真实 GPU 状态
+- NVIDIA Container Toolkit：运行 GPU Docker 容器
+
+安装依赖：
+
+```powershell
+npm install
+```
+
+若首次运行 Playwright：
+
+```powershell
+npx playwright install chromium
+```
+
+## 快速启动
+
+### 答辩/本地演示模式
+
+此模式会创建三组测试账号，并使用 Mock Docker，不要求本机 Docker 正常运行：
 
 ```powershell
 $env:LAB_SEED_TEST_USERS='1'
@@ -44,53 +68,250 @@ $env:LAB_DOCKER_MODE='mock'
 npm start
 ```
 
-然后在浏览器中打开：
+浏览器访问：
 
 ```text
 http://localhost:3000
 ```
 
-数据库会自动生成在 `data/lab_resource.db`。需要 Node.js 24 或更高版本，因为本项目使用内置 `node:sqlite`。
+测试账号：
 
-如需启用真实容器编排，还需要服务器或本机安装 Docker，并确保 `docker` 命令可用。GPU 容器还需要 NVIDIA 驱动和 NVIDIA Container Toolkit。
+| 角色 | 用户名 | 密码 |
+| --- | --- | --- |
+| 管理员 | `admin` | `admin-test-pass` |
+| 导师 | `mentor` | `mentor-test-pass` |
+| 学生 | `lin` | `lin-test-pass` |
 
-登录账号：`admin/admin-test-pass`、`mentor/mentor-test-pass`、`lin/lin-test-pass`。生产式启动不应设置 `LAB_SEED_TEST_USERS`，而应通过 `LAB_BOOTSTRAP_ADMIN_PASSWORD` 创建管理员。
+> 测试账号只应在演示和自动化测试环境中启用。
 
-完整验证：
+### 生产式本地启动
+
+默认 Docker 模式为 `real`。首次启动时通过环境变量创建管理员：
+
+```powershell
+$env:LAB_BOOTSTRAP_ADMIN_PASSWORD='请替换为强密码'
+npm start
+```
+
+管理员创建后可在后续启动中移除该环境变量。不要在生产环境设置 `LAB_SEED_TEST_USERS`。
+
+### 健康检查
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/health
+```
+
+返回值包含数据库路径、Docker 可用状态、运行模式和服务器时间。
+
+## 角色权限
+
+| 操作 | 学生 | 导师 | 管理员 |
+| --- | :---: | :---: | :---: |
+| 查看授权范围内的状态、GPU 和算法报告 | ✓ | ✓ | ✓ |
+| 提交算力申请 | 仅本人 | — | ✓ |
+| 批准、拒绝和自动调度申请 | — | — | ✓ |
+| 操作沙箱 | 仅本人 | — | ✓ |
+| 推进轮转与发送提醒 | — | ✓ | ✓ |
+| 保存导师评分 | — | ✓ | ✓ |
+| 查看完整审计数据 | — | — | ✓ |
+
+服务层还会执行行级所有权校验，不能仅通过构造 API 请求操作其他学生的资源。
+
+## 环境变量
+
+| 变量 | 默认值 | 用途 |
+| --- | --- | --- |
+| `PORT` | `3000` | HTTP 服务端口 |
+| `LAB_MVP_DB` | `data/lab_resource.db` | SQLite 数据库路径 |
+| `LAB_DOCKER_MODE` | `real` | `real` 或 `mock` |
+| `LAB_CONTAINER_PORT` | `8888` | 容器内服务端口 |
+| `LAB_SESSION_TTL_MS` | 8 小时 | 登录会话有效期（毫秒） |
+| `LAB_BOOTSTRAP_ADMIN_PASSWORD` | 空 | 首次创建管理员的密码 |
+| `LAB_SEED_TEST_USERS` | `0` | 设为 `1` 时创建三角色测试账号 |
+
+PowerShell 中环境变量只对当前终端会话生效。
+
+## 端口占用处理
+
+若出现“端口 3000 已被占用”，先确认监听进程：
+
+```powershell
+$listener = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
+$listener
+if ($listener) { Get-Process -Id $listener.OwningProcess }
+```
+
+确认它是可以关闭的旧项目进程后：
+
+```powershell
+Stop-Process -Id $listener.OwningProcess
+npm start
+```
+
+也可以直接换端口：
+
+```powershell
+$env:PORT='3001'
+npm start
+```
+
+然后访问 `http://localhost:3001`。不要在同一端口重复运行多个 `npm start`。
+
+## Docker 模式
+
+### Mock 模式
+
+```powershell
+$env:LAB_DOCKER_MODE='mock'
+npm start
+```
+
+Mock 适配器与真实 Docker 适配器使用相同业务接口，但只维护内存状态；健康检查会明确返回 `mode: "mock"`，不会伪装成真实 Docker。
+
+### 真实模式
+
+真实模式支持：
+
+- 批准申请时执行 `docker run -d`
+- 暂停/恢复时执行 `docker pause` / `docker unpause`
+- 快照时执行 `docker commit`
+- 释放时执行 `docker rm -f`
+- `busybox-demo` 轻量镜像用于普通 Docker 环境验证
+- PyTorch/TensorFlow 镜像用于具备对应 GPU 环境的实验
+
+环境检查：
+
+```powershell
+docker --version
+docker info
+nvidia-smi
+```
+
+Docker 不可用时，真实模式会返回明确错误，不会伪造成功状态。实机验收过程见 [Docker 实机验收报告](feedback-evidence/Docker实机验收报告.md)。
+
+## 知识图谱布局
+
+知识图谱根据筛选结果动态生成：
+
+- 顶部以“实验室资产”为根节点
+- 每条知识记录独占一行
+- 左列为研究方向，中列为接续人，右列为报错经验与代码分支
+- 节点使用固定边界的胶囊形状，行距根据记录数量动态扩展
+- 超长研究方向会省略显示，同时通过 SVG `<title>` 保留完整内容
+- 窄屏下保持可读尺寸并提供横向滚动
+- Playwright 会验证完整视图的 13 个节点无重叠，并验证筛选后的 5 节点视图
+
+## 常用命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `npm start` | 启动应用 |
+| `npm run check` | 递归执行 JavaScript 语法检查 |
+| `npm run test:server` | 后端规则、适配器、数据库、服务和路由测试 |
+| `npm run test:client` | 前端状态、权限、API、渲染和事件测试 |
+| `npm run test:api` | 真实 HTTP/SQLite API 集成测试 |
+| `npm test` | 语法、服务端、客户端和 API 测试 |
+| `npm run test:e2e` | Playwright 三角色和响应式浏览器测试 |
+| `npm run simulate` | 生成 FIFO、SJF、XFS-V1 对照实验 |
+| `npm run db:init` | 初始化数据库 |
+| `npm run db:backup` | 手动备份数据库 |
+| `npm run db:check` | 检查数据库结构和数据 |
+| `npm run verify` | 执行非浏览器完整验证 |
+| `npm run verify:b` | 执行 `npm test` 与端到端测试 |
+
+每次启动若检测到已有数据库，系统会先把迁移前副本保存到 `data/backups/`。终端中的“迁移前数据库备份”是正常提示。
+
+## API 概览
+
+公开接口：
+
+- `GET /api/health`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+登录后主要接口：
+
+- `GET /api/state`
+- `GET /api/gpu-nodes`
+- `GET /api/algorithm/report`
+- `POST /api/requests`
+- `POST /api/requests/:id/approve`
+- `POST /api/requests/:id/reject`
+- `POST /api/schedule/next`
+- `POST /api/sandboxes/:id/toggle`
+- `POST /api/sandboxes/:id/snapshot`
+- `DELETE /api/sandboxes/:id`
+- `POST /api/rotations/:id/progress`
+- `POST /api/rotations/:id/remind`
+- `POST /api/evaluations`
+
+请求与响应契约见 [A → B API 契约](docs/api-contract.md)。
+
+## 工程结构
+
+```text
+.
+├─ server.js                 # 后端依赖组装与启动入口
+├─ app.js                    # 前端组装入口
+├─ index.html / styles.css   # 页面结构与响应式样式
+├─ src/
+│  ├─ server/
+│  │  ├─ adapters/           # Docker、Mock Docker、GPU 监控
+│  │  ├─ auth/               # 密码哈希与校验
+│  │  ├─ db/                 # schema、迁移、seed、repository
+│  │  ├─ routes/             # 鉴权、API、静态资源路由
+│  │  ├─ services/           # 申请、沙箱、轮转、评价、状态
+│  │  └─ scheduler.js        # XFS-V1 调度算法
+│  └─ client/
+│     ├─ render/             # 页面区域渲染器
+│     ├─ api.js              # 请求与状态刷新
+│     ├─ permissions.js      # 前端能力判断
+│     └─ events.js           # 表单与操作事件
+├─ tests/
+│  └─ e2e/                   # Playwright 浏览器验收
+├─ scripts/                  # 模拟、数据库和 E2E 启动脚本
+├─ reports/algorithm/        # 调度算法实验报告
+└─ feedback-evidence/        # 用户反馈与 Docker 验收证据
+```
+
+静态路由使用白名单，只公开页面、前端脚本、截图和指定文档；`data/`、服务端源码、测试文件和隐藏目录不会通过网页暴露。
+
+## 验证
+
+推荐提交前运行：
 
 ```powershell
 npm test
 npm run test:e2e
-npm run verify:b
+npm run simulate
+npm run db:check
 ```
 
-## 工程结构
+端到端测试使用独立数据库 `data/e2e-lab-resource.db`、端口 `3210`、测试账号和 Mock Docker，不会依赖真实 Docker。
 
-当前代码已按职责拆分，`server.js` 保留为后端启动入口，`app.js` 保留为前端组装入口：
+测试范围包括：
 
-- `src/server/`：后端配置、HTTP 工具、数据库 schema/seed/repository、Docker 和 GPU 适配器、业务服务、API/静态路由。
-- `src/client/`：前端状态、DOM 引用、API 请求、渲染、事件处理和可测试的业务规则。
-- `tests/`：API 集成测试、语法检查脚本、配置解析测试、HTTP 工具测试、前端状态/DOM/API/规则/渲染聚合器/渲染分片/事件测试、Docker/GPU 适配器测试、数据库 schema/seed 测试、repository 契约测试、服务层编排测试、API/应用路由测试和静态路由边界测试。
+- XFS-V1 排名、节点匹配和 Jain 公平指数
+- 身份认证、会话、RBAC 与资源所有权
+- Docker 真实/Mock 适配器
+- SQLite schema、迁移、repository 和事务回滚
+- HTTP 错误、请求 ID、安全响应头与静态文件边界
+- 前端状态、渲染、事件、重复提交与错误反馈
+- 三角色浏览器流程、移动端布局和知识图谱防重叠
 
-## 当前完成状态
+## 项目文档
 
-已完成：
-
-- 前端 MVP 工作台：GPU 大盘、算力申请、信用队列、沙箱、轮转 WBS、导师评分、知识图谱。
-- 角色化前端：真实登录会话、学生/导师/管理员权限界面、错误请求 ID、重复提交防护和确认对话框。
-- 算法证据：页面展示 FIFO、SJF、XFS-V1 的确定性对照实验。
-- 浏览器验收：Playwright 覆盖三角色、越权、移动端和破坏性操作确认。
-- 后端 API 与 SQLite：申请、审批、沙箱、进度、评分和知识条目均可持久化。
-- 真实 GPU 监控：有 NVIDIA 驱动时读取 `nvidia-smi`；无 GPU 或读取失败时使用数据库回退数据。
-- Docker 编排接口：批准、暂停、恢复、快照、释放均已调用 Docker CLI，并已完成本机实机验收。
-- 轻量 Docker 演示镜像：申请表可选择 `busybox-demo`，用于在普通 Docker 环境中验证容器创建、暂停、恢复、快照和释放。
-- 提交文档：需求优先级、验证反馈、测试部署和证据归档说明已补充。
-
-仍需在提交前补齐或现场演示：
-
-- 用户反馈访谈摘要已覆盖导师、轮转学生、管理员三类角色；联系方式仍需团队补充或公开版打码说明。
-- Docker 部分已完成实机截图归档；答辩时可现场复现页面批准分配和 `docker ps` 对照。
-- 登录鉴权和 RBAC 已完成；答辩时分别登录三种账号展示权限边界。
+- [需求优先级清单](requirements-priority.md)
+- [用户验证与反馈报告](validation-feedback-report.md)
+- [测试与部署说明](testing-deployment.md)
+- [架构说明](ARCHITECTURE.md)
+- [工程与算法创新说明](ENGINEERING-INNOVATION.md)
+- [A → B API 契约](docs/api-contract.md)
+- [并行部分 B 验收说明](docs/part-b-acceptance.md)
+- [后续迭代计划](后续迭代计划.md)
+- [项目提交自查清单](项目提交自查清单.md)
+- [用户反馈证据清单](feedback-evidence/用户反馈证据清单.md)
 
 ## 预览
 
@@ -102,36 +323,12 @@ npm run verify:b
 
 ![移动端预览](mvp-mobile.png)
 
-## Docker 编排说明
+## 当前边界与后续方向
 
-当前后端已接入 Docker CLI，并已在本机完成实机验收：
+当前版本已完成本地账号、三角色 RBAC、SQLite 持久化、真实/Mock Docker、GPU 监控、可解释调度、审计和知识图谱。以下仍属于后续接入项：
 
-- 批准申请时执行 `docker run -d` 创建容器。
-- 暂停/恢复时执行 `docker pause` / `docker unpause`。
-- 快照时执行 `docker commit` 生成 `lab-snapshot:*` 镜像。
-- 释放时执行 `docker rm -f` 删除容器。
-
-本机未安装 Docker 时，相关 API 会返回明确错误，不会伪造容器成功状态。当前验收中，页面创建的 `lab-rot-3` 容器已在 `docker ps` 中验证存在，页面 Docker ID、镜像、端口和运行状态均与终端输出一致。
-
-Docker 验收材料：
-
-- [Docker 实机验收报告](feedback-evidence/Docker实机验收报告.md)
-- [手动创建、暂停、恢复截图](feedback-evidence/Docker验收-01-手动创建暂停恢复.png)
-- [手动快照、释放截图](feedback-evidence/Docker验收-02-手动快照释放.png)
-- [项目创建容器的 docker ps 截图](feedback-evidence/Docker验收-03-项目容器docker-ps.png)
-- [项目沙箱运行截图](feedback-evidence/Docker验收-04-项目沙箱运行状态.png)
-
-Docker 实机验收建议流程：
-
-1. 运行 `docker --version` 和 `docker info`，截图证明 Docker 可用。
-2. 启动项目并提交一条算力申请。
-3. 镜像模板选择“轻量 Docker 演示（busybox）”，点击批准，截图页面中的容器 ID、端口、Docker 状态。
-4. 运行 `docker ps`，截图同名容器 `lab-rot-{requestId}`。
-5. 执行暂停、恢复、快照、释放，并分别截图页面状态、`docker ps` 或 `docker images` 输出。
-
-## 后续接入点
-
-- 用户反馈驱动的分阶段计划见 [后续迭代计划](后续迭代计划.md)。
-- 日志与代码归档可对接 GitHub API，并把真实提交、报错和解决记录沉淀到知识条目。
-- 训练时长预测可替换为基于历史任务的回归模型。
-- 用户登录与权限可接入学校统一身份认证或实验室账号体系。
+- 学校 SSO 或统一身份认证
+- Kubernetes/队列系统和多机容器编排
+- GitHub API 自动归档真实提交、报错与解决记录
+- 基于历史任务数据训练耗时回归模型
+- 生产级密钥管理、HTTPS、集中日志与监控告警
